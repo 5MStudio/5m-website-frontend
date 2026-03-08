@@ -1,0 +1,60 @@
+'use client'
+
+import React from 'react'
+import { grid } from '../tokens/grid'
+import { spacing } from '../tokens/spacing'
+
+export default function Footer() {
+  return (
+    <footer className="relative w-full">
+      {/* Intro text */}
+      <div
+        className="mx-auto grid grid-cols-8"
+        style={{
+          maxWidth: `calc(100% - ${grid.margin * 2}px)`,
+          columnGap: `${grid.gutter}px`,
+          paddingTop: spacing.xl,
+          paddingBottom: spacing.xl,
+        }}
+      >
+        <div className="col-start-5 col-span-2 text-left">
+          <p>
+            We are always happy to meet new people.
+            <br />
+            Email us at{' '}
+            <a href="mailto:hi@5-m.com" className="no-underline">hi@5-m.com</a>
+          </p>
+        </div>
+      </div>
+
+      {/* Footer grid (same layout as Header, NOT fixed, NO blend mode) */}
+      <div
+        className="mx-auto grid grid-cols-8 items-center py-[10px]"
+        style={{
+          maxWidth: `calc(100% - ${grid.margin * 2}px)`,
+          columnGap: `${grid.gutter}px`,
+        }}
+      >
+        <span className="col-start-1 col-span-1 text-left text-sm">
+          0
+        </span>
+
+        <span className="col-start-3 col-span-1 text-left text-sm">
+          A
+        </span>
+
+        <div className="col-start-4 col-span-2 flex justify-center">
+          <span className="font-bold text-xl">5M</span>
+        </div>
+
+        <span className="col-start-6 col-span-1 text-right text-sm">
+          9
+        </span>
+
+        <span className="col-start-8 col-span-1 text-right text-sm">
+          Z
+        </span>
+      </div>
+    </footer>
+  )
+}
