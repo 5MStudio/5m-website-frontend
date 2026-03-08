@@ -2,11 +2,6 @@
 import { client } from '../sanity/client'
 import { Project } from '../types/project'
 import HomePageClient from './HomePageClient'
-import HomePageCenteredHeader from './HomePageCenteredHeader'
-
-// === TOGGLE HERE ===
-// Just change this word to switch between versions
-const USE_CENTERED_HEADER = false
 
 export default async function HomePageWrapper() {
   const selectedProjects: Project[] = await client.fetch(
@@ -27,16 +22,7 @@ export default async function HomePageWrapper() {
 
   const homepageData = await client.fetch(`*[_type == "homepage"][0]{ introText }`)
 
-  if (USE_CENTERED_HEADER) {
-    // Render the alternative homepage with centered header
-    return <HomePageCenteredHeader 
-      selectedProjects={selectedProjects} 
-      allProjects={allProjects} 
-      homepageData={homepageData} 
-    />
-  }
-
-  // Render classic homepage
+  // Render classic homepage only
   return <HomePageClient 
     selectedProjects={selectedProjects} 
     allProjects={allProjects} 
