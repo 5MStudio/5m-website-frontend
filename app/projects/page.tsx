@@ -1,4 +1,6 @@
 // app/projects/page.tsx
+export const dynamic = "force-dynamic"  // 🔹 ensures server-side fetch on every request
+
 import { client } from '@/sanity/client'
 import ProjectsToggle from '@/components/ProjectsToggle'
 import type { Project } from '@/types/project'
