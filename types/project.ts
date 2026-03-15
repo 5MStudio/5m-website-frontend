@@ -27,6 +27,7 @@ export interface ImageWithVideo {
   }
   ratio?: 'landscape' | 'portrait'
   video?: MuxVideo
+  title?: string // <-- added for Gallery usage
 }
 
 export interface Hero {
@@ -45,6 +46,15 @@ export interface ContentBlock {
   layout?: string
   title?: string
   alignment?: 'left' | 'center' | 'right'
+}
+
+// ───────────────
+// NEW: GalleryBlock type
+// ───────────────
+export interface GalleryBlock extends ContentBlock {
+  _type: 'galleryBlock'
+  images: ImageWithVideo[]
+  layout: 'two' | 'grid' | 'full'
 }
 
 export interface Project {
