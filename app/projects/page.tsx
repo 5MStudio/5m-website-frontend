@@ -1,12 +1,11 @@
 // app/projects/page.tsx
-export const dynamic = "force-dynamic"  // 🔹 ensures server-side fetch on every request
+export const dynamic = "force-dynamic"
 
 import { client } from '@/sanity/client'
 import ProjectsToggle from '@/components/ProjectsToggle'
 import type { Project } from '@/types/project'
 
 export default async function ProjectsPage() {
-  // Fetch all projects directly from Sanity, server-side
   const projects: Project[] = await client.fetch(`
     *[_type == "project"]{
       _id,
@@ -15,22 +14,79 @@ export default async function ProjectsPage() {
       client,
       services,
       slug{current},
-      thumbnail{ asset, ratio },
-      hero{ desktopImage, desktopVideo, mobileImage, mobileVideo },
+      thumbnail{
+        asset->{_id,url},
+        ratio,
+        video{
+          asset->{
+            data{
+              playback_ids
+            }
+          }
+        }
+      },
+      hero{
+        desktopImage,
+        desktopVideo{
+          asset->{
+            data{
+              playback_ids
+            }
+          }
+        },
+        mobileImage,
+        mobileVideo{
+          asset->{
+            data{
+              playback_ids
+            }
+          }
+        }
+      },
       contentBlocks[]{
         _type,
         text,
-        images[]{ asset->{_id,url}, title },
+        images[]{
+          asset->{_id,url},
+          title,
+          video{
+            asset->{
+              data{
+                playback_ids
+              }
+            }
+          }
+        },
         layout,
-        image{ asset->{_id,url} },
+        image{
+          asset->{_id,url},
+          video{
+            asset->{
+              data{
+                playback_ids
+              }
+            }
+          }
+        },
         title,
-        alignment
+        alignment,
+        fullImage{
+          asset->{_id,url},
+          title,
+          video{
+            asset->{
+              data{
+                playback_ids
+              }
+            }
+          }
+        }
       }
     } | order(year desc)
   `)
 
   return (
-    <main className="pt-[100px] pb-[0px]">
+    <main className="pt-[120px] pb-[0px]">
       <ProjectsToggle projects={projects} />
     </main>
   )

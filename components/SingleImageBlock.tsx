@@ -20,8 +20,8 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
     bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: 15,
-    paddingBottom: 15,
+    paddingTop: 20,
+    paddingBottom: 10,
     pointerEvents: 'none',
     zIndex: 10,
   }
@@ -36,7 +36,7 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
   const imageWidth = 'calc((100% - 10px) / 2)'
 
   return (
-    <section className="relative py-[50px] w-full flex justify-between box-border">
+    <section className="relative py-[0px] w-full flex justify-between box-border">
       {/* Image half */}
       <div className={`relative flex ${isRight ? 'order-2 justify-end' : 'justify-start'}`} style={{ width: imageWidth }}>
         <img

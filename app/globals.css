@@ -53,3 +53,18 @@ a:active {
   color: inherit;           /* keep white on hover/focus/active */
   text-decoration: none; /* optional hover underline */
 }
+
+/* --- Portable Text reset --- */
+.pt-reset p,
+.pt-reset h1,
+.pt-reset h2,
+.pt-reset h3,
+.pt-reset h4,
+.pt-reset h5,
+.pt-reset h6,
+.pt-reset ul,
+.pt-reset ol,
+.pt-reset li {
+  margin: 0;
+  padding: 0;
+}

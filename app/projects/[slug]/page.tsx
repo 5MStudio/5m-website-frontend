@@ -1,3 +1,4 @@
+// app/projects/[slug]/page.tsx
 import ProjectPageClient from './ProjectPageClient'
 import { client } from '@/sanity/client'
 import { projectBySlugQuery } from '@/sanity/queries/project'
@@ -23,8 +24,35 @@ export default async function ProjectPageWrapper({ params }: ProjectPageWrapperP
           year,
           client,
           services,
-          thumbnail{ asset->{_id,url}, ratio },
-          hero{ desktopImage, desktopVideo, mobileImage, mobileVideo }
+          thumbnail{
+            asset->{_id,url},
+            ratio,
+            video{
+              asset->{
+                data{
+                  playback_ids
+                }
+              }
+            }
+          },
+          hero{
+            desktopImage,
+            desktopVideo{
+              asset->{
+                data{
+                  playback_ids
+                }
+              }
+            },
+            mobileImage,
+            mobileVideo{
+              asset->{
+                data{
+                  playback_ids
+                }
+              }
+            }
+          }
         }[0...4]`,
         { id: project._id, services: project.services }
       )

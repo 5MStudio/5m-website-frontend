@@ -20,14 +20,14 @@ export default function FullImageBlock({ block, index = 0 }: FullImageBlockProps
     bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: 15,
-    paddingBottom: 15,
+    paddingTop: 20,
+    paddingBottom: 10,
     pointerEvents: 'none',
     zIndex: 10,
   }
 
   return (
-    <section className="relative w-full py-[50px]">
+    <section className="relative w-full">
       <div className="relative w-full">
         {/* Image */}
         <img

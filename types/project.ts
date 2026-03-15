@@ -1,71 +1,60 @@
 // types/project.ts
-export interface Thumbnail {
-  asset: { _ref: string; _type: string }
-  ratio: 'landscape' | 'portrait'
+
+export type MuxVideo = {
+  _type: 'mux.video'
+  asset?: {
+    data?: {
+      playback_ids?: {
+        id: string
+        policy: string
+      }[]
+    }
+  }
+}
+
+export interface ImageAsset {
+  asset: {
+    _id: string
+    url: string
+  }
+}
+
+// Unified image type with optional video
+export interface ImageWithVideo {
+  asset?: {
+    _id: string
+    url: string
+  }
+  ratio?: 'landscape' | 'portrait'
+  video?: MuxVideo
 }
 
 export interface Hero {
-  desktopImage?: { asset: { _ref: string; _type: string } }
-  desktopVideo?: { asset: { _ref: string; _type: string } }
-  mobileImage?: { asset: { _ref: string; _type: string } }
-  mobileVideo?: { asset: { _ref: string; _type: string } }
+  desktopImage?: ImageWithVideo
+  mobileImage?: ImageWithVideo
+  desktopVideo?: MuxVideo
+  mobileVideo?: MuxVideo
 }
 
-export interface TextBlock {
-  _type: 'textBlock'
-  text: any[]
-}
-
-export interface GalleryImage {
-  asset?: { _id: string; url: string } // optional to avoid runtime errors
+export interface ContentBlock {
+  _type: string
+  text?: any
+  images?: ImageWithVideo[] // galleryBlock images
+  image?: ImageWithVideo // singleImageBlock
+  fullImage?: ImageWithVideo // fullImageBlock
+  layout?: string
   title?: string
+  alignment?: 'left' | 'center' | 'right'
 }
-
-export interface GalleryBlock {
-  _type: 'galleryBlock'
-  images: GalleryImage[]
-  layout: 'full' | 'two' | 'grid'
-}
-
-// ───────────────────────────
-// Single image block (50% width)
-// ───────────────────────────
-export interface SingleImageBlock {
-  _type: 'singleImageBlock'
-  image: { asset: { _id: string; url: string } }
-  title?: string
-  alignment: 'left' | 'center' | 'right'
-}
-
-// ───────────────────────────
-// Full image block (100% width)
-// ───────────────────────────
-export interface FullImageBlock {
-  _type: 'fullImageBlock'
-  image: { asset: { _id: string; url: string } }
-  title?: string
-}
-
-// ───────────────────────────
-// Update ContentBlock union
-// ───────────────────────────
-export type ContentBlock =
-  | TextBlock
-  | GalleryBlock
-  | SingleImageBlock
-  | FullImageBlock
 
 export interface Project {
   _id: string
-  slug: {
-    current: string
-  }
+  slug: { current: string }
   title: string
   year: string
   client: string
   services: string[]
+  thumbnail?: ImageWithVideo
   hero: Hero
-  thumbnail?: Thumbnail
-  selected?: boolean
   contentBlocks?: ContentBlock[]
 }

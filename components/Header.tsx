@@ -52,7 +52,7 @@ export default function Header() {
 
         <div
           className="col-start-4 col-span-2 flex justify-center items-center"
-          style={{ gap: `30px` }}
+          style={{ gap: `24px` }}
         >
           <Link href="/about" className="no-underline">
             Studio

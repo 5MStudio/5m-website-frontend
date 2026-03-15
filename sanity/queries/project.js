@@ -1,4 +1,5 @@
-// sanity/queries/project.ts
+// sanity/queries/project.js
+
 export const projectBySlugQuery = `
 *[_type == "project" && slug.current == $slug][0]{
   _id,
@@ -7,26 +8,84 @@ export const projectBySlugQuery = `
   year,
   client,
   services,
+
+  // ─ Thumbnail with video
+  thumbnail{
+    asset->{_id, url},
+    ratio,
+    video{
+      asset->{
+        data{
+          playback_ids
+        }
+      }
+    }
+  },
+
+  // ─ Hero videos
   hero{
     desktopImage,
-    desktopVideo,
+    desktopVideo{
+      asset->{
+        data{
+          playback_ids
+        }
+      }
+    },
     mobileImage,
-    mobileVideo
+    mobileVideo{
+      asset->{
+        data{
+          playback_ids
+        }
+      }
+    }
   },
+
+  // ─ Content blocks
   contentBlocks[]{
     _type,
     text,
+
     images[]{
       asset->{_id, url},
-      title
+      title,
+      video{
+        asset->{
+          data{
+            playback_ids
+          }
+        }
+      }
     },
+
     layout,
-    // SingleImageBlock fields
-    image { asset->{_id, url} },
+
+    image{
+      asset->{_id, url},
+      video{
+        asset->{
+          data{
+            playback_ids
+          }
+        }
+      }
+    },
+
     title,
     alignment,
-    // FullImageBlock fields
-    fullImage { asset->{_id, url}, title }
+
+    fullImage{
+      asset->{_id, url},
+      title,
+      video{
+        asset->{
+          data{
+            playback_ids
+          }
+        }
+      }
+    }
   }
 }
 `

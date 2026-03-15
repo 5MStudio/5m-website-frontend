@@ -18,6 +18,9 @@ export default function HomePageClient({ selectedProjects, allProjects, homepage
   const pathname = usePathname()
   const router = useRouter()
 
+  // Take only the newest 4 projects
+  const latestProjects = allProjects.slice(0, 4)
+
   return (
     <motion.main
       key={pathname}
@@ -32,22 +35,26 @@ export default function HomePageClient({ selectedProjects, allProjects, homepage
       ))}
 
       {homepageData?.introText && (
-        <section className="py-[100px]">
+        <section className="py-[90px]">
           <div className="mx-auto grid grid-cols-8 gap-[30px]" style={{ maxWidth: 'calc(100%-20px)' }}>
-            <div className="col-start-5 col-span-2" style={{ mixBlendMode: 'normal' }}>
+            <div
+              className="col-start-5 col-span-2 cursor-pointer"
+              style={{ mixBlendMode: 'normal' }}
+              onClick={() => router.push('/projects')}
+            >
               <PortableText value={homepageData.introText} />
             </div>
           </div>
         </section>
       )}
 
-      {allProjects.length > 0 && (
+      {latestProjects.length > 0 && (
         <section className="py-16">
-          <ProjectGrid projects={allProjects} />
+          <ProjectGrid projects={latestProjects} />
         </section>
       )}
 
-      <div className="py-[100px]" />
+      <div className="py-[0px]" />
     </motion.main>
   )
 }

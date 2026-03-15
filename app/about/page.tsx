@@ -1,4 +1,3 @@
-// app/about/page.tsx
 import { client } from '@/sanity/client'
 import { aboutQuery } from '@/sanity/queries/about'
 import type { About } from '@/types/about'
@@ -10,7 +9,7 @@ export default async function AboutPage() {
   if (!about) return <div>No content found</div>
 
   return (
-    <main className="pt-[80px] pb-[100px]">
+    <main className="pt-[107px] pb-[0px]">
       <AboutContent about={about} />
     </main>
   )

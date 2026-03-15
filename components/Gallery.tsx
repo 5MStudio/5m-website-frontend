@@ -13,17 +13,17 @@ export default function Gallery({ block }: GalleryProps) {
   const stickyOverlayStyle: React.CSSProperties = {
     position: 'absolute',
     top: 0,
-    bottom: '0%',
+    bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: '15px',
-    paddingBottom: '15px',
+    paddingTop: '17px',
+    paddingBottom: '3px',
     pointerEvents: 'none',
     zIndex: 10,
   }
 
   return (
-    <section className="relative py-[50px] w-screen box-border">
+    <section className="relative w-screen box-border">
       {block.layout === 'two' ? (
         <div className="flex w-full gap-[10px] box-border">
           {block.images.map((img, idx) => (
@@ -37,9 +37,7 @@ export default function Gallery({ block }: GalleryProps) {
               {/* Sticky overlay */}
               <div style={stickyOverlayStyle}>
                 <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
-                  {/* Mini 4-column grid inside each image */}
                   <div className="grid grid-cols-4 w-full">
-                    {/* Swap: 0X first, then title */}
                     <div
                       className="col-span-2 flex items-center"
                       style={{
@@ -86,21 +84,30 @@ export default function Gallery({ block }: GalleryProps) {
                 {/* Sticky overlay */}
                 <div style={stickyOverlayStyle}>
                   <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
-                    {/* Swap positions here too */}
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 left-10"
-                      style={{ mixBlendMode: 'normal' }}
-                    >
-                      {`0${idx + 1}`}
-                    </div>
-                    {img.title && (
+                    <div className="grid grid-cols-4 w-full">
                       <div
-                        className="absolute top-1/2 -translate-y-1/2 right-10"
-                        style={{ mixBlendMode: 'normal' }}
+                        className="col-span-2 flex items-center"
+                        style={{
+                          justifyContent: 'flex-start',
+                          paddingLeft: '10px',
+                          mixBlendMode: 'normal',
+                        }}
                       >
-                        {img.title}
+                        {`0${idx + 1}`}
                       </div>
-                    )}
+                      {img.title && (
+                        <div
+                          className="col-span-2 flex items-center"
+                          style={{
+                            justifyContent: 'flex-end',
+                            paddingRight: '10px',
+                            mixBlendMode: 'normal',
+                          }}
+                        >
+                          {img.title}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
