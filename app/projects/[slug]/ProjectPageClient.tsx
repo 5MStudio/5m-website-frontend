@@ -3,7 +3,7 @@
 import React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Project, ContentBlock, GalleryBlock } from '@/types/project'
+import { Project, ContentBlock, GalleryBlock, SingleImageBlock as SingleImageBlockType, FullImageBlock as FullImageBlockType } from '@/types/project'
 import SelectedProjectHero from '@/components/SelectedProjectHero'
 import Gallery from '@/components/Gallery'
 import ProjectGrid from '@/components/ProjectGrid'
@@ -17,10 +17,18 @@ interface ProjectPageClientProps {
 }
 
 // ───────────────
-// Type guard for gallery blocks
+// Type guards
 // ───────────────
 function isGalleryBlock(block: ContentBlock): block is GalleryBlock {
   return block._type === 'galleryBlock'
+}
+
+function isSingleImageBlock(block: ContentBlock): block is SingleImageBlockType {
+  return block._type === 'singleImageBlock'
+}
+
+function isFullImageBlock(block: ContentBlock): block is FullImageBlockType {
+  return block._type === 'fullImageBlock'
 }
 
 export default function ProjectPageClient({ project, relatedProjects = [] }: ProjectPageClientProps) {
@@ -29,7 +37,6 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
 
   if (!project) return <div>Project not found</div>
 
-  // Construct the services string for the hardcoded text
   const servicesUsed = project.services?.join(', ') || ''
 
   return (
@@ -39,14 +46,14 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
     >
-      {/* Hero always on top, give bottom spacing */}
+      {/* Hero */}
       <div className="mb-[10px]">
         <SelectedProjectHero project={project} />
       </div>
 
       {/* Content blocks */}
       {project.contentBlocks?.map((block, idx) => {
-        const blockClass = 'mb-[10px]' // keep small spacing between sections if needed
+        const blockClass = 'mb-[10px]'
 
         if (block._type === 'textBlock') {
           return (
@@ -73,7 +80,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
           )
         }
 
-        if (block._type === 'singleImageBlock') {
+        if (isSingleImageBlock(block)) {
           return (
             <div key={idx} className={blockClass}>
               <SingleImageBlock block={block} index={idx} />
@@ -81,7 +88,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
           )
         }
 
-        if (block._type === 'fullImageBlock') {
+        if (isFullImageBlock(block)) {
           return (
             <div key={idx} className={blockClass}>
               <FullImageBlock block={block} index={idx} />
@@ -92,7 +99,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
         return null
       })}
 
-      {/* Hardcoded “discover more projects” text like homepage */}
+      {/* Discover more text */}
       {relatedProjects.length > 0 && (
         <section className="pb-[10px]">
           <div className="mx-auto grid grid-cols-8 gap-[30px]" style={{ maxWidth: 'calc(100%-20px)' }}>
@@ -109,7 +116,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
         </section>
       )}
 
-      {/* Related projects grid */}
+      {/* Related projects */}
       {relatedProjects.length > 0 && (
         <section className="mb-[10px]">
           <ProjectGrid projects={relatedProjects.slice(0, 4)} />
