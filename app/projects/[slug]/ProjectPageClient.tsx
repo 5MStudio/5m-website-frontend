@@ -3,7 +3,7 @@
 import React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Project } from '@/types/project'
+import { Project, ContentBlock, GalleryBlock } from '@/types/project'
 import SelectedProjectHero from '@/components/SelectedProjectHero'
 import Gallery from '@/components/Gallery'
 import ProjectGrid from '@/components/ProjectGrid'
@@ -14,6 +14,13 @@ import { PortableText } from '@portabletext/react'
 interface ProjectPageClientProps {
   project: Project | null
   relatedProjects?: Project[]
+}
+
+// ───────────────
+// Type guard for gallery blocks
+// ───────────────
+function isGalleryBlock(block: ContentBlock): block is GalleryBlock {
+  return block._type === 'galleryBlock'
 }
 
 export default function ProjectPageClient({ project, relatedProjects = [] }: ProjectPageClientProps) {
@@ -49,7 +56,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
                   <PortableText
                     value={block.text}
                     components={{
-                      block: ({ children }) => <p className="m-0">{children}</p>, // remove default margins
+                      block: ({ children }) => <p className="m-0">{children}</p>,
                     }}
                   />
                 </div>
@@ -58,7 +65,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
           )
         }
 
-        if (block._type === 'galleryBlock') {
+        if (isGalleryBlock(block)) {
           return (
             <div key={idx} className={blockClass}>
               <Gallery block={block} />
