@@ -3,7 +3,7 @@
 import React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Project, ContentBlock, GalleryBlock, SingleImageBlock as SingleImageBlockType, FullImageBlock as FullImageBlockType } from '@/types/project'
+import { Project, ContentBlock, GalleryBlock, ImageWithVideo } from '@/types/project'
 import SelectedProjectHero from '@/components/SelectedProjectHero'
 import Gallery from '@/components/Gallery'
 import ProjectGrid from '@/components/ProjectGrid'
@@ -23,12 +23,12 @@ function isGalleryBlock(block: ContentBlock): block is GalleryBlock {
   return block._type === 'galleryBlock'
 }
 
-function isSingleImageBlock(block: ContentBlock): block is SingleImageBlockType {
-  return block._type === 'singleImageBlock'
+function isSingleImageBlock(block: ContentBlock): block is { _type: 'singleImageBlock'; image: ImageWithVideo } {
+  return block._type === 'singleImageBlock' && !!block.image
 }
 
-function isFullImageBlock(block: ContentBlock): block is FullImageBlockType {
-  return block._type === 'fullImageBlock'
+function isFullImageBlock(block: ContentBlock): block is { _type: 'fullImageBlock'; fullImage: ImageWithVideo } {
+  return block._type === 'fullImageBlock' && !!block.fullImage
 }
 
 export default function ProjectPageClient({ project, relatedProjects = [] }: ProjectPageClientProps) {
