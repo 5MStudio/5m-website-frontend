@@ -2,9 +2,9 @@
 
 export type MuxVideo = {
   _type: 'mux.video'
-  asset?: {
-    data?: {
-      playback_ids?: {
+  asset: {
+    data: {
+      playback_ids: {
         id: string
         policy: string
       }[]
@@ -49,12 +49,28 @@ export interface ContentBlock {
 }
 
 // ───────────────
-// NEW: GalleryBlock type
+// Gallery block
 // ───────────────
 export interface GalleryBlock extends ContentBlock {
   _type: 'galleryBlock'
   images: ImageWithVideo[]
   layout: 'two' | 'grid' | 'full'
+}
+
+// ───────────────
+// Single image block
+// ───────────────
+export interface SingleImageBlock extends ContentBlock {
+  _type: 'singleImageBlock'
+  image: ImageWithVideo
+}
+
+// ───────────────
+// Full image block
+// ───────────────
+export interface FullImageBlock extends ContentBlock {
+  _type: 'fullImageBlock'
+  fullImage: ImageWithVideo
 }
 
 export interface Project {

@@ -1,5 +1,3 @@
-// sanity/queries/project.js
-
 export const projectBySlugQuery = `
 *[_type == "project" && slug.current == $slug][0]{
   _id,
@@ -14,6 +12,7 @@ export const projectBySlugQuery = `
     asset->{_id, url},
     ratio,
     video{
+      _type,
       asset->{
         data{
           playback_ids
@@ -26,6 +25,7 @@ export const projectBySlugQuery = `
   hero{
     desktopImage,
     desktopVideo{
+      _type,
       asset->{
         data{
           playback_ids
@@ -34,6 +34,7 @@ export const projectBySlugQuery = `
     },
     mobileImage,
     mobileVideo{
+      _type,
       asset->{
         data{
           playback_ids
@@ -51,6 +52,7 @@ export const projectBySlugQuery = `
       asset->{_id, url},
       title,
       video{
+        _type,
         asset->{
           data{
             playback_ids
@@ -64,6 +66,7 @@ export const projectBySlugQuery = `
     image{
       asset->{_id, url},
       video{
+        _type,
         asset->{
           data{
             playback_ids
@@ -79,6 +82,7 @@ export const projectBySlugQuery = `
       asset->{_id, url},
       title,
       video{
+        _type,
         asset->{
           data{
             playback_ids

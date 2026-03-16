@@ -1,11 +1,11 @@
 'use client'
 
 import React from 'react'
-import type { SingleImageBlock as SingleImageBlockType } from '@/types/project'
+import type { SingleImageBlock } from '@/types/project'
 import { urlFor } from '@/sanity/image'
 
 interface SingleImageBlockProps {
-  block: SingleImageBlockType
+  block: SingleImageBlock
   index?: number
 }
 
@@ -13,7 +13,6 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
   const imageUrl = block.image ? urlFor(block.image) : undefined
   if (!imageUrl) return null
 
-  // Sticky overlay style
   const stickyOverlayStyle: React.CSSProperties = {
     position: 'absolute',
     top: 0,
@@ -26,18 +25,14 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
     zIndex: 10,
   }
 
-  // Determine image alignment
   const isRight = block.alignment === 'right'
   const justify = isRight ? 'flex-end' : 'flex-start'
   const paddingLeft = !isRight ? '10px' : undefined
   const paddingRight = isRight ? '10px' : undefined
-
-  // Width of image: half minus 5px gutter
   const imageWidth = 'calc((100% - 10px) / 2)'
 
   return (
     <section className="relative py-[0px] w-full flex justify-between box-border">
-      {/* Image half */}
       <div className={`relative flex ${isRight ? 'order-2 justify-end' : 'justify-start'}`} style={{ width: imageWidth }}>
         <img
           src={imageUrl}
@@ -45,11 +40,9 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
           className="w-full h-auto object-cover"
         />
 
-        {/* Sticky overlay */}
         <div style={stickyOverlayStyle}>
           <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
             <div className="grid grid-cols-4 w-full">
-              {/* 0X */}
               <div
                 className="col-span-2 flex items-center"
                 style={{
@@ -62,7 +55,6 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
                 {`0${index + 1}`}
               </div>
 
-              {/* Image title */}
               {block.title && (
                 <div
                   className="col-span-2 flex items-center"
@@ -81,7 +73,6 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
         </div>
       </div>
 
-      {/* Empty half for alignment */}
       <div style={{ width: imageWidth }} />
     </section>
   )

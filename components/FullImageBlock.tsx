@@ -1,17 +1,18 @@
 'use client'
 
 import React from 'react'
-import type { FullImageBlock as FullImageBlockType } from '@/types/project'
+import type { FullImageBlock } from '@/types/project'
 import { urlFor } from '@/sanity/image'
 
 interface FullImageBlockProps {
-  block: FullImageBlockType
+  block: FullImageBlock
   index?: number
 }
 
 export default function FullImageBlock({ block, index = 0 }: FullImageBlockProps) {
-  if (!block.image) return null
-  const imageUrl = urlFor(block.image)
+  // Safety: fullImage may exist but asset may be undefined
+  if (!block.fullImage?.asset) return null
+  const imageUrl = urlFor(block.fullImage)
   if (!imageUrl) return null
 
   const stickyOverlayStyle: React.CSSProperties = {
@@ -29,19 +30,15 @@ export default function FullImageBlock({ block, index = 0 }: FullImageBlockProps
   return (
     <section className="relative w-full">
       <div className="relative w-full">
-        {/* Image */}
         <img
           src={imageUrl}
           alt={block.title || 'Project Image'}
           className="w-full h-auto object-cover"
         />
 
-        {/* Sticky overlay */}
         <div style={stickyOverlayStyle}>
           <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
             <div className="grid grid-cols-8 w-full">
-              
-              {/* Number */}
               <div
                 className="col-start-1 flex items-center"
                 style={{
@@ -53,7 +50,6 @@ export default function FullImageBlock({ block, index = 0 }: FullImageBlockProps
                 {`0${index + 1}`}
               </div>
 
-              {/* Title */}
               {block.title && (
                 <div
                   className="col-start-3 flex items-center"
@@ -66,7 +62,6 @@ export default function FullImageBlock({ block, index = 0 }: FullImageBlockProps
                   {block.title}
                 </div>
               )}
-
             </div>
           </div>
         </div>

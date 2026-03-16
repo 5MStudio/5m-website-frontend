@@ -52,6 +52,49 @@ export default async function ProjectPageWrapper({ params }: ProjectPageWrapperP
                 }
               }
             }
+          },
+          contentBlocks[]{
+            _type,
+            text,
+            layout,
+            title,
+            alignment,
+            images[]{
+              asset->{_id,url},
+              ratio,
+              title,
+              video{
+                asset->{
+                  data{
+                    playback_ids
+                  }
+                }
+              }
+            },
+            image{
+              asset->{_id,url},
+              ratio,
+              title,
+              video{
+                asset->{
+                  data{
+                    playback_ids
+                  }
+                }
+              }
+            },
+            fullImage{
+              asset->{_id,url},
+              ratio,
+              title,
+              video{
+                asset->{
+                  data{
+                    playback_ids
+                  }
+                }
+              }
+            }
           }
         }[0...4]`,
         { id: project._id, services: project.services }
