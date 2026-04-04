@@ -17,7 +17,21 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
   // ───────────────────
   // Thumbnail media
   // ───────────────────
-  const aspect = project.thumbnail?.ratio === 'landscape' ? 16 / 9 : 4 / 5
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [cardWidth, setCardWidth] = useState(0)
+
+  useEffect(() => {
+    function updateWidth() {
+      if (!cardRef.current) return
+      setCardWidth(cardRef.current.offsetWidth)
+    }
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
+
+  const aspectRatio = project.thumbnail?.ratio === 'landscape' ? 16 / 9 : 4 / 5
+  const cardHeight = cardWidth / aspectRatio
 
   const thumbnailVideoId =
     project.thumbnail?.video?.asset?.data?.playback_ids?.[0]?.id
@@ -25,9 +39,10 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
     ? `https://stream.mux.com/${thumbnailVideoId}.m3u8`
     : undefined
 
-  const thumbnailImageUrl = project.thumbnail?.asset
-    ? urlFor(project.thumbnail.asset, 400, aspect)
-    : undefined
+  const thumbnailImageAsset = project.thumbnail?.asset
+    ? project.thumbnail.asset
+    : (project.thumbnail as any)?.image?.asset
+  const thumbnailImageUrl = thumbnailImageAsset ? urlFor(thumbnailImageAsset) : undefined
 
   // ───────────────────
   // Count images for overlay
@@ -63,14 +78,18 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
         temp.style.fontFamily = 'AntiqueLegacy, sans-serif'
         temp.innerText = project.services[i]
         document.body.appendChild(temp)
+
         totalWidth += temp.offsetWidth
         if (i < project.services.length - 1) totalWidth += 10
+
         document.body.removeChild(temp)
+
         if (totalWidth > containerWidth) {
           count = i
           break
         }
       }
+
       setVisibleCount(count)
     }
 
@@ -96,15 +115,15 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
         className="group block relative rounded overflow-hidden mx-[-10px] shadow-sm cursor-pointer"
       >
         {(thumbnailVideoUrl || thumbnailImageUrl) && (
-          <div className="relative w-full">
+          <div
+            ref={cardRef}
+            className="relative w-full"
+            style={{ height: `${cardHeight}px` }}
+          >
             {thumbnailVideoUrl ? (
               <video
                 src={thumbnailVideoUrl}
-                className={`w-full object-cover ${
-                  project.thumbnail?.ratio === 'landscape'
-                    ? 'aspect-video'
-                    : 'aspect-[4/5]'
-                }`}
+                className="absolute top-0 left-0 w-full h-full object-cover"
                 autoPlay
                 muted
                 loop
@@ -115,11 +134,7 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
               <img
                 src={thumbnailImageUrl!}
                 alt={project.title}
-                className={`w-full object-cover ${
-                  project.thumbnail?.ratio === 'landscape'
-                    ? 'aspect-video'
-                    : 'aspect-[4/5]'
-                }`}
+                className="absolute top-0 left-0 w-full h-full object-cover"
               />
             )}
 
@@ -131,6 +146,7 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
 
         <div className="pt-[10px] px-[10px] flex justify-between text-sm transition-opacity duration-200 group-hover:opacity-25">
           <span>{project.client}</span>
+
           <span
             ref={containerRef}
             className="flex items-center whitespace-nowrap overflow-hidden"
@@ -148,6 +164,7 @@ export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps
                 {service}
               </span>
             ))}
+
             {hiddenCount > 0 && <span>+{hiddenCount}</span>}
           </span>
         </div>

@@ -10,7 +10,7 @@ interface SingleImageBlockProps {
 }
 
 export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockProps) {
-  const imageUrl = block.image ? urlFor(block.image) : undefined
+  const imageUrl = urlFor(block.image)
   if (!imageUrl) return null
 
   const stickyOverlayStyle: React.CSSProperties = {
@@ -23,6 +23,8 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
     paddingBottom: 10,
     pointerEvents: 'none',
     zIndex: 10,
+    mixBlendMode: 'difference',
+    color: 'white',
   }
 
   const isRight = block.alignment === 'right'
@@ -45,12 +47,7 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
             <div className="grid grid-cols-4 w-full">
               <div
                 className="col-span-2 flex items-center"
-                style={{
-                  justifyContent: justify,
-                  mixBlendMode: 'normal',
-                  paddingLeft,
-                  paddingRight,
-                }}
+                style={{ justifyContent: justify, paddingLeft, paddingRight }}
               >
                 {`0${index + 1}`}
               </div>
@@ -58,12 +55,7 @@ export default function SingleImageBlock({ block, index = 0 }: SingleImageBlockP
               {block.title && (
                 <div
                   className="col-span-2 flex items-center"
-                  style={{
-                    justifyContent: justify,
-                    mixBlendMode: 'normal',
-                    paddingLeft,
-                    paddingRight,
-                  }}
+                  style={{ justifyContent: justify, paddingLeft, paddingRight }}
                 >
                   {block.title}
                 </div>

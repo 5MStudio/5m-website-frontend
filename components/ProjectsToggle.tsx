@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import ProjectGrid from './ProjectGrid'
 import type { Project, ImageWithVideo, ContentBlock } from '@/types/project'
@@ -16,19 +17,28 @@ interface MediaItem {
 }
 
 export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
+  const router = useRouter()
   const [view, setView] = useState<'grid' | 'text'>('grid')
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null)
   const [activeService, setActiveService] = useState<string | null>(null)
   const [showServices, setShowServices] = useState(false)
   const [showReorder, setShowReorder] = useState(false)
   const [sortBy, setSortBy] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const imageRefs = useRef<Record<string, HTMLDivElement[]>>({})
 
-  // ───────────────────
-  // Get all media (images + videos) for grid view
-  // ───────────────────
+  // Track screen width for mobile adjustments
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // ─ Media helpers (grid / text) ─
   const getAllMediaForGrid = (project: Project): MediaItem[] => {
     const media: MediaItem[] = []
-
     if (project.thumbnail) {
       if (project.thumbnail.video?.asset?.data?.playback_ids?.[0]?.id) {
         media.push({
@@ -40,7 +50,6 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
         media.push({ url: project.thumbnail.asset.url, title: project.title, type: 'image' })
       }
     }
-
     project.contentBlocks?.forEach((block: ContentBlock) => {
       if (block._type === 'galleryBlock') {
         block.images?.forEach((img: ImageWithVideo) => {
@@ -78,41 +87,39 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
         }
       }
     })
-
     return media
   }
 
-  // ───────────────────
-  // Get only images for index/text view (use Mux thumbnails for videos)
-  // ───────────────────
   const getAllMediaForText = (project: Project): MediaItem[] => {
     const media: MediaItem[] = []
-
     if (project.thumbnail) {
       if (project.thumbnail.video?.asset?.data?.playback_ids?.[0]?.id) {
         const playbackId = project.thumbnail.video.asset.data.playback_ids[0].id
         media.push({
-          url: `https://image.mux.com/${playbackId}/thumbnail.jpg?width=400`,
+          url: `https://image.mux.com/${playbackId}/thumbnail.jpg?height=0`,
           title: project.title,
           type: 'image',
         })
       } else if (project.thumbnail.asset?.url) {
-        media.push({ url: project.thumbnail.asset.url, title: project.title, type: 'image' })
+        media.push({
+          url: `${project.thumbnail.asset.url}?h=200`,
+          title: project.title,
+          type: 'image',
+        })
       }
     }
-
     project.contentBlocks?.forEach((block: ContentBlock) => {
       if (block._type === 'galleryBlock') {
         block.images?.forEach((img: ImageWithVideo) => {
           if (img.video?.asset?.data?.playback_ids?.[0]?.id) {
             const playbackId = img.video.asset.data.playback_ids[0].id
             media.push({
-              url: `https://image.mux.com/${playbackId}/thumbnail.jpg?width=400`,
+              url: `https://image.mux.com/${playbackId}/thumbnail.jpg?height=200`,
               title: img?.asset?.url ? img.asset.url : undefined,
               type: 'image',
             })
           } else if (img.asset?.url) {
-            media.push({ url: img.asset.url, type: 'image' })
+            media.push({ url: `${img.asset.url}?h=200`, type: 'image' })
           }
         })
       }
@@ -120,34 +127,31 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
         if (block.image.video?.asset?.data?.playback_ids?.[0]?.id) {
           const playbackId = block.image.video.asset.data.playback_ids[0].id
           media.push({
-            url: `https://image.mux.com/${playbackId}/thumbnail.jpg?width=400`,
+            url: `https://image.mux.com/${playbackId}/thumbnail.jpg?height=200`,
             title: block.title,
             type: 'image',
           })
         } else if (block.image.asset?.url) {
-          media.push({ url: block.image.asset.url, title: block.title, type: 'image' })
+          media.push({ url: `${block.image.asset.url}?h=200`, title: block.title, type: 'image' })
         }
       }
       if (block._type === 'fullImageBlock' && block.fullImage) {
         if (block.fullImage.video?.asset?.data?.playback_ids?.[0]?.id) {
           const playbackId = block.fullImage.video.asset.data.playback_ids[0].id
           media.push({
-            url: `https://image.mux.com/${playbackId}/thumbnail.jpg?width=400`,
+            url: `https://image.mux.com/${playbackId}/thumbnail.jpg?height=200`,
             title: block.fullImage.asset?.url,
             type: 'image',
           })
         } else if (block.fullImage.asset?.url) {
-          media.push({ url: block.fullImage.asset.url, title: block.fullImage.asset.url, type: 'image' })
+          media.push({ url: `${block.fullImage.asset.url}?h=200`, title: block.fullImage.asset.url, type: 'image' })
         }
       }
     })
-
     return media
   }
 
-  // ───────────────────
-  // All services for filtering
-  // ───────────────────
+  // ─ Services / sort ─
   const allServices = useMemo(() => {
     const serviceSet = new Set<string>()
     projects.forEach((p) => p.services.forEach((s) => serviceSet.add(s)))
@@ -155,10 +159,8 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
   }, [projects])
 
   const filteredProjects = useMemo(() => {
-    let result = activeService
-      ? projects.filter((p) => p.services.includes(activeService))
-      : projects
-
+    let result = projects
+    if (activeService) result = projects.filter((p) => p.services.includes(activeService))
     if (sortBy) {
       result = [...result].sort((a, b) => {
         if (sortBy === 'Year') return (a.year || '').localeCompare(b.year || '')
@@ -172,101 +174,169 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
 
   return (
     <>
-      {/* ─ Header / filters ─ */}
-      <div className="grid grid-cols-8 gap-[30px] mx-[10px] mb-[10px] max-w-[calc(100%-20px)]">
-        
-        {/* Grid toggle */}
-        <div className="col-start-1 col-span-2 flex justify-start items-center">
-          <span
-            className={`cursor-pointer transition-opacity duration-200 ${
-              view === 'grid' ? 'opacity-25' : 'opacity-100'
-            }`}
-            onClick={() => setView('grid')}
-          >
-            Grid
-          </span>
-        </div>
-
-        {/* Index toggle */}
-        <div className="col-start-3 col-span-2 flex justify-start items-center">
-          <span
-            className={`cursor-pointer transition-opacity duration-200 ${
-              view === 'text' ? 'opacity-25' : 'opacity-100'
-            }`}
-            onClick={() => setView('text')}
-          >
-            Index
-          </span>
-        </div>
-
-        {/* Services / Refine */}
-        <div className="col-start-5 col-span-2 flex justify-start relative">
-          {showServices ? (
-            <div className="absolute top-0 right-0 flex flex-wrap justify-end gap-[10px]">
-              {allServices.map((service, i) => (
-                <motion.span
-                  key={service}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: activeService === service ? 0.25 : 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="cursor-pointer px-2 py-1 text-sm font-medium"
-                  onClick={() =>
-                    setActiveService(activeService === service ? null : service)
-                  }
-                >
-                  {service}
-                </motion.span>
-              ))}
+      {/* Header / filters */}
+      <div
+        className={`${
+          isMobile
+            ? 'flex gap-[10px] px-[10px] mb-[10px] w-full'
+            : 'grid grid-cols-8 gap-[30px] mx-[10px] mb-[10px] max-w-[calc(100%-20px)]'
+        }`}
+      >
+        {isMobile ? (
+          <>
+            <div className="flex flex-1 gap-[10px]">
+              <span
+                className="cursor-pointer transition-opacity duration-200"
+                style={{ opacity: view === 'grid' ? 0.2 : 1 }}
+                onClick={() => setView('grid')}
+              >
+                Grid
+              </span>
+              <span
+                className="cursor-pointer transition-opacity duration-200"
+                style={{ opacity: view === 'text' ? 0.2 : 1 }}
+                onClick={() => setView('text')}
+              >
+                Index
+              </span>
             </div>
-          ) : (
-            <motion.span
-              key="refine"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="cursor-pointer px-2 py-1 text-sm font-medium"
-              onClick={() => setShowServices(true)}
-            >
-              Refine
-            </motion.span>
-          )}
-        </div>
-
-        {/* Reorder / sorting */}
-        <div className="col-start-7 col-span-2 flex justify-start relative">
-          {showReorder ? (
-            <div className="absolute top-0 right-0 flex flex-wrap justify-end gap-[10px]">
-              {['Year', 'Client', 'Service'].map((opt, i) => (
-                <motion.span
-                  key={opt}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: sortBy === opt ? 0.25 : 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="cursor-pointer px-2 py-1 text-sm font-medium"
-                  onClick={() => setSortBy(sortBy === opt ? null : opt)}
+            <div className="flex flex-1 gap-[10px] justify-start">
+              <motion.span
+                key="reorder"
+                className="cursor-pointer px-2 py-1 text-sm font-medium transition-opacity duration-200"
+                style={{ opacity: showReorder ? 0.2 : 1 }}
+                onClick={() => setShowReorder(!showReorder)}
+              >
+                Reorder
+              </motion.span>
+              {showReorder && (
+                <div
+                  className="flex gap-[10px] ml-[10px] overflow-x-auto touch-pan-x"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
                 >
-                  {opt}
-                </motion.span>
-              ))}
+                  {['Year', 'Client', 'Service'].map((opt) => (
+                    <motion.span
+                      key={opt}
+                      className="cursor-pointer px-2 py-1 text-sm font-medium flex-shrink-0 transition-opacity duration-200"
+                      style={{ opacity: sortBy === opt ? 0.2 : 1 }}
+                      onClick={() => setSortBy((prev) => (prev === opt ? null : opt))}
+                    >
+                      {opt}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
+              <motion.span
+                key="refine"
+                className="cursor-pointer px-2 py-1 text-sm font-medium transition-opacity duration-200"
+                style={{ opacity: showServices ? 0.2 : 1 }}
+                onClick={() => setShowServices(!showServices)}
+              >
+                Refine
+              </motion.span>
+              {showServices && (
+                <div
+                  className="flex gap-[10px] ml-[10px] overflow-x-auto touch-pan-x"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                >
+                  {allServices.map((service) => (
+                    <motion.span
+                      key={service}
+                      className="cursor-pointer px-2 py-1 text-sm font-medium flex-shrink-0 transition-opacity duration-200"
+                      style={{ opacity: activeService === service ? 0.2 : 1 }}
+                      onClick={() =>
+                        setActiveService((prev) => (prev === service ? null : service))
+                      }
+                    >
+                      {service}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <motion.span
-              key="reorder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="cursor-pointer px-2 py-1 text-sm font-medium"
-              onClick={() => setShowReorder(true)}
-            >
-              Reorder
-            </motion.span>
-          )}
-        </div>
+          </>
+        ) : (
+          <>
+            {/* Desktop fully restored */}
+            <div className="col-start-1 col-span-2 flex justify-start items-center">
+              <span
+                className="cursor-pointer transition-opacity duration-200"
+                style={{ opacity: view === 'grid' ? 0.2 : 1 }}
+                onClick={() => setView('grid')}
+              >
+                Grid
+              </span>
+            </div>
+            <div className="col-start-3 col-span-2 flex justify-start items-center">
+              <span
+                className="cursor-pointer transition-opacity duration-200"
+                style={{ opacity: view === 'text' ? 0.2 : 1 }}
+                onClick={() => setView('text')}
+              >
+                Index
+              </span>
+            </div>
+            <div className="col-start-5 col-span-2 flex items-center">
+              <motion.span
+                key="refine"
+                className="cursor-pointer px-2 py-1 text-sm font-medium transition-opacity duration-200"
+                style={{ opacity: showServices ? 0.2 : 1 }}
+                onClick={() => setShowServices(!showServices)}
+              >
+                Refine
+              </motion.span>
+              {showServices && (
+                <div
+                  className="flex gap-[10px] ml-[10px] overflow-x-auto touch-pan-x"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                >
+                  {allServices.map((service) => (
+                    <motion.span
+                      key={service}
+                      className="cursor-pointer px-2 py-1 text-sm font-medium flex-shrink-0 transition-opacity duration-200"
+                      style={{ opacity: activeService === service ? 0.2 : 1 }}
+                      onClick={() =>
+                        setActiveService((prev) => (prev === service ? null : service))
+                      }
+                    >
+                      {service}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="col-start-7 col-span-2 flex items-center">
+              <motion.span
+                key="reorder"
+                className="cursor-pointer px-2 py-1 text-sm font-medium transition-opacity duration-200"
+                style={{ opacity: showReorder ? 0.2 : 1 }}
+                onClick={() => setShowReorder(!showReorder)}
+              >
+                Reorder
+              </motion.span>
+              {showReorder && (
+                <div
+                  className="flex gap-[10px] ml-[10px] overflow-x-auto touch-pan-x"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                >
+                  {['Year', 'Client', 'Service'].map((opt) => (
+                    <motion.span
+                      key={opt}
+                      className="cursor-pointer px-2 py-1 text-sm font-medium flex-shrink-0 transition-opacity duration-200"
+                      style={{ opacity: sortBy === opt ? 0.2 : 1 }}
+                      onClick={() => setSortBy((prev) => (prev === opt ? null : opt))}
+                    >
+                      {opt}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* ─ Project grid / text view ─ */}
+      {/* Grid / Text view */}
       <AnimatePresence mode="wait">
         {view === 'grid' ? (
           <motion.div
@@ -279,65 +349,81 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
             <ProjectGrid projects={filteredProjects} />
           </motion.div>
         ) : (
-          <motion.div
-            key="text-view"
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            className="flex flex-col gap-[0px]"
-          >
-            {/* Horizontal images strip (posters only) */}
-            <div className="flex overflow-x-auto gap-[0px] mb-[10px] h-[80px]">
-              {filteredProjects.map((project, pi) =>
+          <motion.div key="text-view" initial="hidden" animate="visible" exit="hidden" className="flex flex-col gap-[0px]">
+            {/* Horizontal images strip */}
+            <div
+              ref={scrollRef}
+              className="flex gap-[0px] mb-[10px] h-[80px] touch-pan-x"
+              style={{
+                overflowX: 'auto',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
+              {filteredProjects.map((project) =>
                 getAllMediaForText(project).map((mediaItem, idx) => {
-                  const isActive = !hoveredProjectId || hoveredProjectId === project._id
+                  if (!imageRefs.current[project._id]) imageRefs.current[project._id] = []
                   return (
                     <motion.img
                       key={`${project._id}-${idx}`}
                       src={mediaItem.url}
                       alt={mediaItem.title || 'Project media'}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isActive ? 1 : 0.25 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ delay: pi * 0.05 }}
-                      className="h-[80px] object-contain flex-shrink-0"
+                      animate={{ opacity: !hoveredProjectId || hoveredProjectId === project._id ? 1 : 0.25 }}
+                      transition={{ duration: 0 }}
+                      className="h-[80px] object-contain flex-shrink-0 cursor-pointer"
+                      ref={(el) => {
+                        if (el) imageRefs.current[project._id][idx] = el
+                      }}
                       onMouseEnter={() => setHoveredProjectId(project._id)}
                       onMouseLeave={() => setHoveredProjectId(null)}
+                      onClick={() => router.push(`/projects/${project.slug?.current}`)}
+                      style={{ userSelect: 'none' }}
                     />
                   )
                 })
               )}
             </div>
 
-            {/* Column headers row */}
-            <div className="grid grid-cols-8 gap-[30px] mx-[10px] mb-[90px] max-w-[calc(100%-20px)] font-medium text-sm">
-              <div className="col-start-1 col-span-2 text-left">Year</div>
-              <div className="col-start-3 col-span-2 text-left">Client</div>
-              <div className="col-start-5 col-span-2 text-left">Project</div>
-              <div className="col-start-7 col-span-2 text-left">Service</div>
-            </div>
+            {/* Column headers */}
+            {!isMobile && (
+              <div className="grid grid-cols-8 gap-[30px] mx-[10px] mb-[90px] max-w-[calc(100%-20px)] font-medium text-sm">
+                <div className="col-start-1 col-span-2 text-left">Year</div>
+                <div className="col-start-3 col-span-2 text-left">Client</div>
+                <div className="col-start-5 col-span-2 text-left">Project</div>
+                <div className="col-start-7 col-span-2 text-left">Service</div>
+              </div>
+            )}
 
             {/* List view */}
-            {filteredProjects.map((p, i) => {
-              const isActive = !hoveredProjectId || hoveredProjectId === p._id
-              return (
-                <motion.div
-                  key={p._id}
-                  className="grid grid-cols-8 gap-[30px] mx-[10px] py-[2px] max-w-[calc(100%-20px)]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isActive ? 1 : 0.25 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onMouseEnter={() => setHoveredProjectId(p._id)}
-                  onMouseLeave={() => setHoveredProjectId(null)}
-                >
-                  <div className="col-start-1 col-span-2 text-left">{p.year}</div>
-                  <div className="col-start-3 col-span-2 text-left">{p.client}</div>
-                  <div className="col-start-5 col-span-2 text-left truncate">{p.title}</div>
-                  <div className="col-start-7 col-span-2 text-left truncate">{p.services.join(', ')}</div>
-                </motion.div>
-              )
-            })}
+            {filteredProjects.map((p) => (
+              <motion.div
+                key={p._id}
+                className={`${
+                  isMobile
+                    ? 'grid grid-cols-2 gap-[10px] mx-[10px] py-[2px] max-w-[calc(100%-20px)]'
+                    : 'grid grid-cols-8 gap-[30px] mx-[10px] py-[2px] max-w-[calc(100%-20px)]'
+                } cursor-pointer`}
+                animate={{ opacity: !hoveredProjectId || hoveredProjectId === p._id ? 1 : 0.25 }}
+                transition={{ duration: 0 }}
+                onMouseEnter={() => {
+                  setHoveredProjectId(p._id)
+                  if (scrollRef.current && imageRefs.current[p._id]?.length) {
+                    scrollRef.current.scrollTo({
+                      left: imageRefs.current[p._id][0].offsetLeft,
+                      behavior: 'smooth',
+                    })
+                  }
+                }}
+                onMouseLeave={() => setHoveredProjectId(null)}
+                onClick={() => router.push(`/projects/${p.slug?.current}`)}
+              >
+                {!isMobile && <div className="col-start-1 col-span-2 text-left">{p.year}</div>}
+                <div className={`${isMobile ? 'col-span-1' : 'col-start-3 col-span-2'} text-left`}>{p.client}</div>
+                {!isMobile && <div className="col-start-5 col-span-2 text-left truncate">{p.title}</div>}
+                <div className={`${isMobile ? 'col-span-1' : 'col-start-7 col-span-2'} text-left truncate`}>{p.services.join(', ')}</div>
+              </motion.div>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>

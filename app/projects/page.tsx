@@ -6,84 +6,90 @@ import ProjectsToggle from '@/components/ProjectsToggle'
 import type { Project } from '@/types/project'
 
 export default async function ProjectsPage() {
-  const projects: Project[] = await client.fetch(`
-    *[_type == "project"]{
-      _id,
-      title,
-      year,
-      client,
-      services,
-      slug{current},
-      thumbnail{
-        asset->{_id,url},
-        ratio,
-        video{
-          asset->{
-            data{
-              playback_ids
-            }
-          }
-        }
-      },
-      hero{
-        desktopImage,
-        desktopVideo{
-          asset->{
-            data{
-              playback_ids
-            }
-          }
-        },
-        mobileImage,
-        mobileVideo{
-          asset->{
-            data{
-              playback_ids
-            }
-          }
-        }
-      },
-      contentBlocks[]{
-        _type,
-        text,
-        images[]{
-          asset->{_id,url},
-          title,
-          video{
-            asset->{
-              data{
-                playback_ids
-              }
-            }
-          }
-        },
-        layout,
-        image{
-          asset->{_id,url},
-          video{
-            asset->{
-              data{
-                playback_ids
-              }
-            }
-          }
-        },
+  // Fetch the single Projects Page document
+  const projectsPage = await client.fetch(`
+    *[_type == "projectsPage"][0]{
+      orderedProjects[]->{
+        _id,
         title,
-        alignment,
-        fullImage{
+        year,
+        client,
+        services,
+        slug{current},
+        thumbnail{
           asset->{_id,url},
-          title,
+          ratio,
           video{
             asset->{
               data{
                 playback_ids
+              }
+            }
+          }
+        },
+        hero{
+          desktopImage,
+          desktopVideo{
+            asset->{
+              data{
+                playback_ids
+              }
+            }
+          },
+          mobileImage,
+          mobileVideo{
+            asset->{
+              data{
+                playback_ids
+              }
+            }
+          }
+        },
+        contentBlocks[]{
+          _type,
+          text,
+          images[]{
+            asset->{_id,url},
+            title,
+            video{
+              asset->{
+                data{
+                  playback_ids
+                }
+              }
+            }
+          },
+          layout,
+          image{
+            asset->{_id,url},
+            video{
+              asset->{
+                data{
+                  playback_ids
+                }
+              }
+            }
+          },
+          title,
+          alignment,
+          fullImage{
+            asset->{_id,url},
+            title,
+            video{
+              asset->{
+                data{
+                  playback_ids
+                }
               }
             }
           }
         }
       }
-    } | order(year desc)
+    }
   `)
+
+  // Use the ordered projects array (empty fallback just in case)
+  const projects: Project[] = projectsPage?.orderedProjects || []
 
   return (
     <main className="pt-[120px] pb-[0px]">

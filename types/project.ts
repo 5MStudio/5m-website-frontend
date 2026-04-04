@@ -1,5 +1,8 @@
 // types/project.ts
 
+// ───────────────────
+// Mux video type
+// ───────────────────
 export type MuxVideo = {
   _type: 'mux.video'
   asset: {
@@ -12,24 +15,23 @@ export type MuxVideo = {
   }
 }
 
-export interface ImageAsset {
-  asset: {
-    _id: string
-    url: string
-  }
-}
-
+// ───────────────────
 // Unified image type with optional video
+// ───────────────────
 export interface ImageWithVideo {
-  asset?: {
+  _id?: string
+  asset?: {       // matches GROQ query
     _id: string
     url: string
   }
   ratio?: 'landscape' | 'portrait'
   video?: MuxVideo
-  title?: string // <-- added for Gallery usage
+  title?: string
 }
 
+// ───────────────────
+// Hero section
+// ───────────────────
 export interface Hero {
   desktopImage?: ImageWithVideo
   mobileImage?: ImageWithVideo
@@ -37,42 +39,55 @@ export interface Hero {
   mobileVideo?: MuxVideo
 }
 
+// ───────────────────
+// Content blocks
+// ───────────────────
 export interface ContentBlock {
   _type: string
   text?: any
-  images?: ImageWithVideo[] // galleryBlock images
-  image?: ImageWithVideo // singleImageBlock
-  fullImage?: ImageWithVideo // fullImageBlock
+
+  // GalleryBlock
+  images?: ImageWithVideo[]
+
+  // SingleImageBlock
+  image?: ImageWithVideo
+
+  // FullImageBlock
+  fullImage?: ImageWithVideo
+
   layout?: string
   title?: string
   alignment?: 'left' | 'center' | 'right'
 }
 
-// ───────────────
-// Gallery block
-// ───────────────
+// ───────────────────
+// GalleryBlock (specialized ContentBlock)
+// ───────────────────
 export interface GalleryBlock extends ContentBlock {
   _type: 'galleryBlock'
   images: ImageWithVideo[]
   layout: 'two' | 'grid' | 'full'
 }
 
-// ───────────────
-// Single image block
-// ───────────────
+// ───────────────────
+// SingleImageBlock
+// ───────────────────
 export interface SingleImageBlock extends ContentBlock {
   _type: 'singleImageBlock'
   image: ImageWithVideo
 }
 
-// ───────────────
-// Full image block
-// ───────────────
+// ───────────────────
+// FullImageBlock
+// ───────────────────
 export interface FullImageBlock extends ContentBlock {
   _type: 'fullImageBlock'
   fullImage: ImageWithVideo
 }
 
+// ───────────────────
+// Project type
+// ───────────────────
 export interface Project {
   _id: string
   slug: { current: string }

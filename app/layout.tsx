@@ -20,9 +20,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="bg-red-500 font-sans">
         <PageFadeWrapper key={key}>
-          <Header />
-          {children}
-          <Footer />
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            
+            {/* main content grows to fill remaining space */}
+            <main className="flex-grow">
+              {children}
+            </main>
+            
+            <Footer />
+          </div>
         </PageFadeWrapper>
       </body>
     </html>

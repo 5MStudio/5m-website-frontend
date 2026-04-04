@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Project } from '../types/project'
@@ -9,14 +9,45 @@ import ProjectGrid from '../components/ProjectGrid'
 import { PortableText } from '@portabletext/react'
 
 interface HomePageClientProps {
-  selectedProjects: Project[]
+  featuredProjects: Project[]
   allProjects: Project[]
   homepageData: { introText?: any }
 }
 
-export default function HomePageClient({ selectedProjects, allProjects, homepageData }: HomePageClientProps) {
+export default function HomePageClient({
+  featuredProjects,
+  allProjects,
+  homepageData,
+}: HomePageClientProps) {
   const pathname = usePathname()
   const router = useRouter()
+
+  // Track column layout exactly like ProjectPageClient
+  const [colStart, setColStart] = useState(5)
+  const [colSpan, setColSpan] = useState(2)
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth
+      if (width < 640) {
+        // small screens
+        setColStart(5)
+        setColSpan(4)
+      } else if (width < 1024) {
+        // medium screens
+        setColStart(5)
+        setColSpan(4)
+      } else {
+        // large screens
+        setColStart(5)
+        setColSpan(2)
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Take only the newest 4 projects
   const latestProjects = allProjects.slice(0, 4)
@@ -28,26 +59,32 @@ export default function HomePageClient({ selectedProjects, allProjects, homepage
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
     >
-      {selectedProjects.map((project, index) => (
-        <div key={index} className="mb-[10px] cursor-pointer" onClick={() => router.push(`/projects/${project.slug.current}`)}>
+      {/* Render featured projects */}
+      {featuredProjects.map((project, index) => (
+        <div
+          key={index}
+          className="mb-[10px] cursor-pointer"
+          onClick={() => router.push(`/projects/${project.slug.current}`)}
+        >
           <SelectedProjectHero project={project} />
         </div>
       ))}
 
+      {/* Intro text */}
       {homepageData?.introText && (
         <section className="py-[90px]">
-          <div className="mx-auto grid grid-cols-8 gap-[30px]" style={{ maxWidth: 'calc(100%-20px)' }}>
-            <div
-              className="col-start-5 col-span-2 cursor-pointer"
-              style={{ mixBlendMode: 'normal' }}
-              onClick={() => router.push('/projects')}
-            >
+          <div
+            className="grid grid-cols-8 gap-[30px] px-[10px] mx-auto"
+            style={{ maxWidth: 'calc(100% - 20px)' }}
+          >
+            <div className={`col-start-${colStart} col-span-${colSpan} cursor-pointer`}>
               <PortableText value={homepageData.introText} />
             </div>
           </div>
         </section>
       )}
 
+      {/* Latest projects */}
       {latestProjects.length > 0 && (
         <section className="py-16">
           <ProjectGrid projects={latestProjects} />

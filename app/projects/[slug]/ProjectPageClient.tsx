@@ -1,20 +1,21 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Project, ContentBlock, GalleryBlock, SingleImageBlock as SingleImageBlockType, FullImageBlock as FullImageBlockType } from '@/types/project'
+import {
+  Project,
+  ContentBlock,
+  GalleryBlock,
+  SingleImageBlock as SingleImageBlockType,
+  FullImageBlock as FullImageBlockType,
+} from '@/types/project'
 import SelectedProjectHero from '@/components/SelectedProjectHero'
 import Gallery from '@/components/Gallery'
 import ProjectGrid from '@/components/ProjectGrid'
 import SingleImageBlock from '@/components/SingleImageBlock'
 import FullImageBlock from '@/components/FullImageBlock'
 import { PortableText } from '@portabletext/react'
-
-interface ProjectPageClientProps {
-  project: Project | null
-  relatedProjects?: Project[]
-}
 
 // ───────────────
 // Type guards
@@ -31,9 +32,39 @@ function isFullImageBlock(block: ContentBlock): block is FullImageBlockType {
   return block._type === 'fullImageBlock'
 }
 
+interface ProjectPageClientProps {
+  project: Project | null
+  relatedProjects?: Project[]
+}
+
 export default function ProjectPageClient({ project, relatedProjects = [] }: ProjectPageClientProps) {
   const pathname = usePathname()
   const router = useRouter()
+
+  const [colStart, setColStart] = useState(5)
+  const [colSpan, setColSpan] = useState(2)
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth
+      if (width < 640) {
+        // smallest screens
+        setColStart(5)
+        setColSpan(4)
+      } else if (width < 1024) {
+        // medium screens
+        setColStart(5)
+        setColSpan(4)
+      } else {
+        // large screens
+        setColStart(5)
+        setColSpan(2)
+      }
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   if (!project) return <div>Project not found</div>
 
@@ -58,8 +89,13 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
         if (block._type === 'textBlock') {
           return (
             <section key={idx} className={blockClass}>
-              <div className="grid grid-cols-8 gap-[30px] px-[10px] max-w-[calc(100%-20px)] mx-auto">
-                <div className="col-start-5 col-span-2 pt-[90px] pb-[90px]">
+              <div
+                className="grid grid-cols-8 gap-[30px] px-[10px] mx-auto"
+                style={{ maxWidth: 'calc(100% - 20px)' }}
+              >
+                <div
+                  className={`col-start-${colStart} col-span-${colSpan} pt-[90px] pb-[90px]`}
+                >
                   <PortableText
                     value={block.text}
                     components={{
@@ -102,9 +138,12 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
       {/* Discover more text */}
       {relatedProjects.length > 0 && (
         <section className="pb-[10px]">
-          <div className="mx-auto grid grid-cols-8 gap-[30px]" style={{ maxWidth: 'calc(100%-20px)' }}>
+          <div
+            className="grid grid-cols-8 gap-[30px] px-[10px] mx-auto"
+            style={{ maxWidth: 'calc(100% - 100px)' }}
+          >
             <div
-              className="col-start-5 col-span-2 cursor-pointer pt-[90px] pb-[90px]"
+              className={`col-start-${colStart} col-span-${colSpan} cursor-pointer pt-[90px] pb-[90px]`}
               style={{ mixBlendMode: 'normal' }}
               onClick={() => router.push('/projects')}
             >

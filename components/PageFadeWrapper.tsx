@@ -6,10 +6,20 @@ import { grid } from '../tokens/grid'
 
 export default function PageFadeWrapper({ children }: { children: React.ReactNode }) {
   const [showOverlay, setShowOverlay] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowOverlay(false), 1200)
-    return () => clearTimeout(timeout)
+
+    // Track screen width for mobile
+    const handleResize = () => setIsMobile(window.innerWidth < 640)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      clearTimeout(timeout)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   // Variants for letters
@@ -22,13 +32,13 @@ export default function PageFadeWrapper({ children }: { children: React.ReactNod
   const containerVariants = {
     animate: {
       transition: {
-        staggerChildren: 0.2, // time between letters appearing
+        staggerChildren: 0.2,
       },
     },
     exit: {
       transition: {
-        staggerChildren: 0.15, // time between letters disappearing
-        staggerDirection: -1, // reverse order on exit
+        staggerChildren: 0.15,
+        staggerDirection: -1,
       },
     },
   }
@@ -55,23 +65,48 @@ export default function PageFadeWrapper({ children }: { children: React.ReactNod
             animate="animate"
             exit="exit"
           >
-            <motion.span className="col-start-1 col-span-1 text-left" variants={letterVariants}>
-              0
-            </motion.span>
-            <motion.span className="col-start-3 col-span-1 text-left" variants={letterVariants}>
-              A
-            </motion.span>
+            {/* Left */}
             <motion.span
-              className="col-start-4 col-span-2 text-center font-bold text-2xl"
+              className="col-start-1 col-span-1 text-left"
+              variants={letterVariants}
+            >
+              {isMobile ? '0A' : '0'}
+            </motion.span>
+
+            {/* Middle left (desktop only) */}
+            {!isMobile && (
+              <motion.span
+                className="col-start-3 col-span-1 text-left"
+                variants={letterVariants}
+              >
+                A
+              </motion.span>
+            )}
+
+            {/* Center */}
+            <motion.span
+              className={`${isMobile ? 'col-start-4 col-span-2 text-center font-bold text-2xl' : 'col-start-4 col-span-2 text-center font-bold text-2xl'}`}
               variants={letterVariants}
             >
               5M
             </motion.span>
-            <motion.span className="col-start-6 col-span-1 text-right" variants={letterVariants}>
-              9
-            </motion.span>
-            <motion.span className="col-start-8 col-span-1 text-right" variants={letterVariants}>
-              Z
+
+            {/* Right middle (desktop only) */}
+            {!isMobile && (
+              <motion.span
+                className="col-start-6 col-span-1 text-right"
+                variants={letterVariants}
+              >
+                9
+              </motion.span>
+            )}
+
+            {/* Right */}
+            <motion.span
+              className="col-start-8 col-span-1 text-right"
+              variants={letterVariants}
+            >
+              {isMobile ? '9Z' : 'Z'}
             </motion.span>
           </motion.div>
         </motion.div>

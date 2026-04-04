@@ -10,9 +10,7 @@ interface FullImageBlockProps {
 }
 
 export default function FullImageBlock({ block, index = 0 }: FullImageBlockProps) {
-  // Safety: fullImage may exist but asset may be undefined
-  if (!block.fullImage?.asset) return null
-  const imageUrl = urlFor(block.fullImage)
+  const imageUrl = urlFor(block.fullImage) // ✅ block.fullImage is already ImageWithVideo
   if (!imageUrl) return null
 
   const stickyOverlayStyle: React.CSSProperties = {
