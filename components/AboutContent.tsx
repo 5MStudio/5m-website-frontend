@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import type { About } from '@/types/about'
 import { grid } from '../tokens/grid'
 
@@ -11,8 +12,8 @@ interface AboutContentProps {
 
 export default function AboutContent({ about }: AboutContentProps) {
   const [isSmallScreen, setIsSmallScreen] = useState(false)
+  const router = useRouter()
 
-  // ─ Track screen size (same logic as project page) ─
   useEffect(() => {
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth < 640)
@@ -30,7 +31,6 @@ export default function AboutContent({ about }: AboutContentProps) {
     }),
   }
 
-  // dynamic span
   const dynamicSpan = isSmallScreen ? 'col-span-4' : 'col-span-2'
 
   return (
@@ -58,10 +58,8 @@ export default function AboutContent({ about }: AboutContentProps) {
         </div>
       </motion.div>
 
-      {/* ─ Spacer ─ */}
       <div style={{ height: '80px', width: '100%' }} />
 
-      {/* ─ Grid rows ─ */}
       <div
         className="grid grid-cols-8 mx-auto"
         style={{
@@ -74,14 +72,36 @@ export default function AboutContent({ about }: AboutContentProps) {
         <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={1} variants={rowVariants}>
           <div className="col-start-1 col-span-2 font-bold">01</div>
           <div className="col-start-3 col-span-2 font-bold">Services</div>
-          <div className={`col-start-5 ${dynamicSpan}`}>{about.services?.join(', ')}</div>
+          <div className={`col-start-5 ${dynamicSpan}`}>
+            {about.services?.map((service, idx) => (
+              <span
+                key={service}
+                onClick={() => router.push(`/projects?service=${encodeURIComponent(service)}`)}
+                className="cursor-pointer"
+                style={{ marginRight: idx !== about.services!.length - 1 ? '10px' : 0 }}
+              >
+                {service}
+              </span>
+            ))}
+          </div>
         </motion.div>
 
         {/* Clients */}
         <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={2} variants={rowVariants}>
           <div className="col-start-1 col-span-2 font-bold">02</div>
           <div className="col-start-3 col-span-2 font-bold">Clients</div>
-          <div className={`col-start-5 ${dynamicSpan}`}>{about.clients?.join(', ')}</div>
+          <div className={`col-start-5 ${dynamicSpan}`}>
+            {about.clients?.map((client, idx) => (
+              <span
+                key={client}
+                onClick={() => router.push(`/projects?client=${encodeURIComponent(client)}`)}
+                className="cursor-pointer"
+                style={{ marginRight: idx !== about.clients!.length - 1 ? '10px' : 0 }}
+              >
+                {client}
+              </span>
+            ))}
+          </div>
         </motion.div>
 
         {/* Offices */}

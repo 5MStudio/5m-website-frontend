@@ -68,3 +68,11 @@ a:active {
   margin: 0;
   padding: 0;
 }
+
+/* --- Mobile font override --- */
+@media (max-width: 640px) {
+  body, h1, h2, h3, h4, h5, h6, p, li, span {
+    font-size: 11px !important;
+    line-height: 13px !important;
+  }
+}

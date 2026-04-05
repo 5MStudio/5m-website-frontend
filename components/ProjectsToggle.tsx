@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import ProjectGrid from './ProjectGrid'
 import type { Project, ImageWithVideo, ContentBlock } from '@/types/project'
@@ -18,16 +18,26 @@ interface MediaItem {
 
 export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [view, setView] = useState<'grid' | 'text'>('grid')
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null)
-  const [activeService, setActiveService] = useState<string | null>(null)
+
+  // INITIAL FILTER FROM URL
+  const [activeService, setActiveService] = useState<string | null>(
+    searchParams.get('service')
+  )
+  const [activeClient, setActiveClient] = useState<string | null>(
+    searchParams.get('client')
+  )
+
   const [showServices, setShowServices] = useState(false)
   const [showReorder, setShowReorder] = useState(false)
   const [sortBy, setSortBy] = useState<string | null>(null)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const imageRefs = useRef<Record<string, HTMLDivElement[]>>({})
 
-  // Track screen width for mobile adjustments
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640)
@@ -36,7 +46,6 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // ─ Media helpers (grid / text) ─
   const getAllMediaForGrid = (project: Project): MediaItem[] => {
     const media: MediaItem[] = []
     if (project.thumbnail) {
@@ -151,16 +160,17 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
     return media
   }
 
-  // ─ Services / sort ─
   const allServices = useMemo(() => {
     const serviceSet = new Set<string>()
     projects.forEach((p) => p.services.forEach((s) => serviceSet.add(s)))
     return Array.from(serviceSet)
   }, [projects])
 
+  // ─ FILTERED PROJECTS ─
   const filteredProjects = useMemo(() => {
     let result = projects
-    if (activeService) result = projects.filter((p) => p.services.includes(activeService))
+    if (activeService) result = result.filter((p) => p.services.includes(activeService))
+    if (activeClient) result = result.filter((p) => p.client === activeClient)
     if (sortBy) {
       result = [...result].sort((a, b) => {
         if (sortBy === 'Year') return (a.year || '').localeCompare(b.year || '')
@@ -170,7 +180,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
       })
     }
     return result
-  }, [projects, activeService, sortBy])
+  }, [projects, activeService, activeClient, sortBy])
 
   return (
     <>
@@ -178,7 +188,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
       <div
         className={`${
           isMobile
-            ? 'flex gap-[10px] px-[10px] mb-[10px] w-full'
+            ? 'flex gap-[30px] px-[10px] mb-[10px] w-[calc(100%-20px)]'
             : 'grid grid-cols-8 gap-[30px] mx-[10px] mb-[10px] max-w-[calc(100%-20px)]'
         }`}
       >
@@ -244,9 +254,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
                       key={service}
                       className="cursor-pointer px-2 py-1 text-sm font-medium flex-shrink-0 transition-opacity duration-200"
                       style={{ opacity: activeService === service ? 0.2 : 1 }}
-                      onClick={() =>
-                        setActiveService((prev) => (prev === service ? null : service))
-                      }
+                      onClick={() => setActiveService((prev) => (prev === service ? null : service))}
                     >
                       {service}
                     </motion.span>
@@ -257,7 +265,6 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
           </>
         ) : (
           <>
-            {/* Desktop fully restored */}
             <div className="col-start-1 col-span-2 flex justify-start items-center">
               <span
                 className="cursor-pointer transition-opacity duration-200"
@@ -295,9 +302,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
                       key={service}
                       className="cursor-pointer px-2 py-1 text-sm font-medium flex-shrink-0 transition-opacity duration-200"
                       style={{ opacity: activeService === service ? 0.2 : 1 }}
-                      onClick={() =>
-                        setActiveService((prev) => (prev === service ? null : service))
-                      }
+                      onClick={() => setActiveService((prev) => (prev === service ? null : service))}
                     >
                       {service}
                     </motion.span>
@@ -353,7 +358,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
             {/* Horizontal images strip */}
             <div
               ref={scrollRef}
-              className="flex gap-[0px] mb-[10px] h-[80px] touch-pan-x"
+              className="flex gap-[0px] mb-[10px] h-[100px] touch-pan-x"
               style={{
                 overflowX: 'auto',
                 scrollbarWidth: 'none',
@@ -371,7 +376,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
                       alt={mediaItem.title || 'Project media'}
                       animate={{ opacity: !hoveredProjectId || hoveredProjectId === project._id ? 1 : 0.25 }}
                       transition={{ duration: 0 }}
-                      className="h-[80px] object-contain flex-shrink-0 cursor-pointer"
+                      className="h-[100px] object-contain flex-shrink-0 cursor-pointer"
                       ref={(el) => {
                         if (el) imageRefs.current[project._id][idx] = el
                       }}
@@ -385,17 +390,30 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
               )}
             </div>
 
-            {/* Column headers */}
-            {!isMobile && (
-              <div className="grid grid-cols-8 gap-[30px] mx-[10px] mb-[90px] max-w-[calc(100%-20px)] font-medium text-sm">
-                <div className="col-start-1 col-span-2 text-left">Year</div>
-                <div className="col-start-3 col-span-2 text-left">Client</div>
-                <div className="col-start-5 col-span-2 text-left">Project</div>
-                <div className="col-start-7 col-span-2 text-left">Service</div>
-              </div>
-            )}
+            {/* Column headers — always rendered, 2-col on mobile, 8-col on desktop */}
+            <div
+              className={`${
+                isMobile
+                  ? 'grid grid-cols-2 gap-[10px] mx-[10px] mb-[90px] max-w-[calc(100%-20px)]'
+                  : 'grid grid-cols-8 gap-[30px] mx-[10px] mb-[90px] max-w-[calc(100%-20px)]'
+              } font-medium text-sm`}
+            >
+              {isMobile ? (
+                <>
+                  <div className="col-span-1 text-left">Client</div>
+                  <div className="col-span-1 text-left">Service</div>
+                </>
+              ) : (
+                <>
+                  <div className="col-start-1 col-span-2 text-left">Year</div>
+                  <div className="col-start-3 col-span-2 text-left">Client</div>
+                  <div className="col-start-5 col-span-2 text-left">Project</div>
+                  <div className="col-start-7 col-span-2 text-left">Service</div>
+                </>
+              )}
+            </div>
 
-            {/* List view */}
+            {/* List rows */}
             {filteredProjects.map((p) => (
               <motion.div
                 key={p._id}
@@ -405,23 +423,23 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
                     : 'grid grid-cols-8 gap-[30px] mx-[10px] py-[2px] max-w-[calc(100%-20px)]'
                 } cursor-pointer`}
                 animate={{ opacity: !hoveredProjectId || hoveredProjectId === p._id ? 1 : 0.25 }}
-                transition={{ duration: 0 }}
-                onMouseEnter={() => {
-                  setHoveredProjectId(p._id)
-                  if (scrollRef.current && imageRefs.current[p._id]?.length) {
-                    scrollRef.current.scrollTo({
-                      left: imageRefs.current[p._id][0].offsetLeft,
-                      behavior: 'smooth',
-                    })
-                  }
-                }}
+                onMouseEnter={() => setHoveredProjectId(p._id)}
                 onMouseLeave={() => setHoveredProjectId(null)}
                 onClick={() => router.push(`/projects/${p.slug?.current}`)}
               >
-                {!isMobile && <div className="col-start-1 col-span-2 text-left">{p.year}</div>}
-                <div className={`${isMobile ? 'col-span-1' : 'col-start-3 col-span-2'} text-left`}>{p.client}</div>
-                {!isMobile && <div className="col-start-5 col-span-2 text-left truncate">{p.title}</div>}
-                <div className={`${isMobile ? 'col-span-1' : 'col-start-7 col-span-2'} text-left truncate`}>{p.services.join(', ')}</div>
+                {isMobile ? (
+                  <>
+                    <div className="col-span-1">{p.client}</div>
+                    <div className="col-span-1">{p.services.join(', ')}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="col-start-1 col-span-2">{p.year}</div>
+                    <div className="col-start-3 col-span-2">{p.client}</div>
+                    <div className="col-start-5 col-span-2">{p.title}</div>
+                    <div className="col-start-7 col-span-2">{p.services.join(', ')}</div>
+                  </>
+                )}
               </motion.div>
             ))}
           </motion.div>
