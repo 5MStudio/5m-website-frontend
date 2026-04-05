@@ -15,9 +15,7 @@ export default function AboutContent({ about }: AboutContentProps) {
   const router = useRouter()
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 640)
-    }
+    const handleResize = () => setIsSmallScreen(window.innerWidth < 640)
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -32,6 +30,22 @@ export default function AboutContent({ about }: AboutContentProps) {
   }
 
   const dynamicSpan = isSmallScreen ? 'col-span-4' : 'col-span-2'
+
+  // helper to render clickable items with commas
+  const renderClickableList = (items?: string[], queryParam?: string) =>
+    items?.map((item, idx) => (
+      <React.Fragment key={item}>
+        <span
+          className="cursor-pointer"
+          onClick={() =>
+            router.push(`/projects?${queryParam}=${encodeURIComponent(item)}`)
+          }
+        >
+          {item}
+        </span>
+        {idx !== items.length - 1 && ', '}
+      </React.Fragment>
+    ))
 
   return (
     <div
@@ -64,48 +78,51 @@ export default function AboutContent({ about }: AboutContentProps) {
         className="grid grid-cols-8 mx-auto"
         style={{
           maxWidth: `calc(100% - ${grid.margin * 2}px)`,
-          columnGap: `${grid.gutter}px`,
+          columnGap: isSmallScreen ? '12px' : `${grid.gutter}px`,
           rowGap: '24px',
         }}
       >
         {/* Services */}
-        <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={1} variants={rowVariants}>
+        <motion.div
+          className="col-span-8 grid grid-cols-8"
+          style={{ columnGap: '30px' }}
+          initial="hidden"
+          animate="visible"
+          custom={1}
+          variants={rowVariants}
+        >
           <div className="col-start-1 col-span-2 font-bold">01</div>
           <div className="col-start-3 col-span-2 font-bold">Services</div>
           <div className={`col-start-5 ${dynamicSpan}`}>
-            {about.services?.map((service, idx) => (
-              <span
-                key={service}
-                onClick={() => router.push(`/projects?service=${encodeURIComponent(service)}`)}
-                className="cursor-pointer"
-                style={{ marginRight: idx !== about.services!.length - 1 ? '10px' : 0 }}
-              >
-                {service}
-              </span>
-            ))}
+            {renderClickableList(about.services, 'service')}
           </div>
         </motion.div>
 
         {/* Clients */}
-        <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={2} variants={rowVariants}>
+        <motion.div
+          className="col-span-8 grid grid-cols-8"
+          style={{ columnGap: '30px' }}
+          initial="hidden"
+          animate="visible"
+          custom={2}
+          variants={rowVariants}
+        >
           <div className="col-start-1 col-span-2 font-bold">02</div>
           <div className="col-start-3 col-span-2 font-bold">Clients</div>
           <div className={`col-start-5 ${dynamicSpan}`}>
-            {about.clients?.map((client, idx) => (
-              <span
-                key={client}
-                onClick={() => router.push(`/projects?client=${encodeURIComponent(client)}`)}
-                className="cursor-pointer"
-                style={{ marginRight: idx !== about.clients!.length - 1 ? '10px' : 0 }}
-              >
-                {client}
-              </span>
-            ))}
+            {renderClickableList(about.clients, 'client')}
           </div>
         </motion.div>
 
         {/* Offices */}
-        <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={3} variants={rowVariants}>
+        <motion.div
+          className="col-span-8 grid grid-cols-8"
+          style={{ columnGap: '30px' }}
+          initial="hidden"
+          animate="visible"
+          custom={3}
+          variants={rowVariants}
+        >
           <div className="col-start-1 col-span-2 font-bold">03</div>
           <div className="col-start-3 col-span-2 font-bold">Offices</div>
           <div className={`col-start-5 ${dynamicSpan} flex flex-col gap-1`}>
@@ -116,7 +133,14 @@ export default function AboutContent({ about }: AboutContentProps) {
         </motion.div>
 
         {/* Contact */}
-        <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={4} variants={rowVariants}>
+        <motion.div
+          className="col-span-8 grid grid-cols-8"
+          style={{ columnGap: '30px' }}
+          initial="hidden"
+          animate="visible"
+          custom={4}
+          variants={rowVariants}
+        >
           <div className="col-start-1 col-span-2 font-bold">04</div>
           <div className="col-start-3 col-span-2 font-bold">Contact</div>
           <div className={`col-start-5 ${dynamicSpan} flex flex-col gap-1`}>
@@ -127,7 +151,14 @@ export default function AboutContent({ about }: AboutContentProps) {
         </motion.div>
 
         {/* Platforms */}
-        <motion.div className="col-span-8 grid grid-cols-8 gap-x-[30px]" initial="hidden" animate="visible" custom={5} variants={rowVariants}>
+        <motion.div
+          className="col-span-8 grid grid-cols-8"
+          style={{ columnGap: '30px' }}
+          initial="hidden"
+          animate="visible"
+          custom={5}
+          variants={rowVariants}
+        >
           <div className="col-start-1 col-span-2 font-bold">05</div>
           <div className="col-start-3 col-span-2 font-bold">Platforms</div>
           <div className={`col-start-5 ${dynamicSpan} flex flex-col gap-1`}>
