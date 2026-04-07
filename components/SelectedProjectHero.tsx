@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useState, useEffect } from 'react'
+import Hls from 'hls.js'
 import { Project } from '../types/project'
 import { urlFor } from '../sanity/image'
 
@@ -13,10 +14,31 @@ export default function SelectedProjectHero({ project }: SelectedProjectHeroProp
   const playbackId = project.hero?.desktopVideo?.asset?.data?.playback_ids?.[0]?.id
   const heroVideoUrl = playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : undefined
 
+  const videoRef = useRef<HTMLVideoElement>(null)
   const servicesRef = useRef<HTMLDivElement>(null)
   const [visibleCount, setVisibleCount] = useState(project.services.length)
   const [isMobile, setIsMobile] = useState(false)
 
+  // HLS setup
+  useEffect(() => {
+    if (!videoRef.current || !heroVideoUrl) return
+
+    if (Hls.isSupported()) {
+      const hls = new Hls()
+      hls.loadSource(heroVideoUrl)
+      hls.attachMedia(videoRef.current)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        videoRef.current?.play().catch(() => {})
+      })
+      return () => hls.destroy()
+    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari fallback
+      videoRef.current.src = heroVideoUrl
+      videoRef.current.play().catch(() => {})
+    }
+  }, [heroVideoUrl])
+
+  // Responsive handling
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640)
     handleResize()
@@ -84,7 +106,7 @@ export default function SelectedProjectHero({ project }: SelectedProjectHeroProp
       <div className="relative w-full h-full">
         {heroVideoUrl ? (
           <video
-            src={heroVideoUrl}
+            ref={videoRef}
             className="absolute top-0 left-0 w-full h-full object-cover"
             autoPlay
             muted

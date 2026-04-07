@@ -51,8 +51,9 @@ export default function Gallery({ block }: GalleryProps) {
               <div style={stickyOverlayStyle}>
                 <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                   <div className="grid grid-cols-4 w-full">
+                    {/* Number */}
                     <div
-                      className="col-span-4 flex items-center"
+                      className="col-span-2 flex items-center"
                       style={{
                         justifyContent: idx === 0 ? 'flex-start' : 'flex-end',
                         paddingLeft: idx === 0 ? '10px' : undefined,
@@ -62,6 +63,7 @@ export default function Gallery({ block }: GalleryProps) {
                       {`0${idx + 1}`}
                     </div>
 
+                    {/* Title */}
                     {img.title && (
                       <div
                         className="col-span-2 flex items-center"
@@ -121,8 +123,9 @@ export default function Gallery({ block }: GalleryProps) {
                 <div style={stickyOverlayStyle}>
                   <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                     <div className="grid grid-cols-4 w-full">
+                      {/* Number */}
                       <div
-                        className="col-span-4 flex items-center"
+                        className="col-span-2 flex items-center"
                         style={{
                           justifyContent: isRightSide ? 'flex-end' : 'flex-start',
                           paddingLeft: !isRightSide ? '10px' : undefined,
@@ -131,6 +134,8 @@ export default function Gallery({ block }: GalleryProps) {
                       >
                         {`0${idx + 1}`}
                       </div>
+
+                      {/* Title */}
                       {img.title && (
                         <div
                           className="col-span-2 flex items-center"
