@@ -52,7 +52,7 @@ export default function Gallery({ block }: GalleryProps) {
                 <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                   <div className="grid grid-cols-4 w-full">
                     <div
-                      className="col-span-2 flex items-center"
+                      className="col-span-4 flex items-center"
                       style={{
                         justifyContent: idx === 0 ? 'flex-start' : 'flex-end',
                         paddingLeft: idx === 0 ? '10px' : undefined,
@@ -98,6 +98,18 @@ export default function Gallery({ block }: GalleryProps) {
               colSpan = block.layout === 'grid' ? 2 : 8
             }
 
+            const isDesktop = !isSmall
+            const half = Math.ceil(block.images.length / 2)
+            const isRightSideDesktop = isDesktop && idx >= half
+
+            // Mobile logic: 01/03 = start, 02/04 = end
+            const isRightSideMobile =
+              isSmall && (block.images.length === 2 || block.images.length === 4)
+                ? idx % 2 === 1
+                : false
+
+            const isRightSide = isRightSideDesktop || isRightSideMobile
+
             return (
               <div key={idx} className={`relative box-border ${!isSmall ? `col-span-${colSpan}` : ''}`}>
                 <img
@@ -110,10 +122,11 @@ export default function Gallery({ block }: GalleryProps) {
                   <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                     <div className="grid grid-cols-4 w-full">
                       <div
-                        className="col-span-2 flex items-center"
+                        className="col-span-4 flex items-center"
                         style={{
-                          justifyContent: 'flex-start',
-                          paddingLeft: '10px',
+                          justifyContent: isRightSide ? 'flex-end' : 'flex-start',
+                          paddingLeft: !isRightSide ? '10px' : undefined,
+                          paddingRight: isRightSide ? '10px' : undefined,
                         }}
                       >
                         {`0${idx + 1}`}
@@ -122,8 +135,9 @@ export default function Gallery({ block }: GalleryProps) {
                         <div
                           className="col-span-2 flex items-center"
                           style={{
-                            justifyContent: 'flex-end',
-                            paddingRight: '10px',
+                            justifyContent: isRightSide ? 'flex-end' : 'flex-start',
+                            paddingLeft: !isRightSide ? '10px' : undefined,
+                            paddingRight: isRightSide ? '10px' : undefined,
                           }}
                         >
                           {img.title}

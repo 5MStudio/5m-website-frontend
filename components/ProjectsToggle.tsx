@@ -22,6 +22,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
 
   const [view, setView] = useState<'grid' | 'text'>('grid')
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null)
+  const isHoveringImage = useRef(false)
 
   // INITIAL FILTER FROM URL
   const [activeService, setActiveService] = useState<string | null>(
@@ -45,6 +46,30 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Scroll image strip so hovered project's images are centered — only when hovering text rows
+  useEffect(() => {
+    if (!hoveredProjectId || isMobile || isHoveringImage.current) return
+    const container = scrollRef.current
+    const refs = imageRefs.current[hoveredProjectId]
+    if (!container || !refs || refs.length === 0) return
+
+    const firstImg = refs[0]
+    const lastImg = refs[refs.length - 1]
+    if (!firstImg || !lastImg) return
+
+    const containerRect = container.getBoundingClientRect()
+    const firstRect = firstImg.getBoundingClientRect()
+    const lastRect = lastImg.getBoundingClientRect()
+
+    const groupLeft = firstRect.left - containerRect.left + container.scrollLeft
+    const groupRight = lastRect.right - containerRect.left + container.scrollLeft
+    const groupCenter = (groupLeft + groupRight) / 2
+
+    const targetScrollLeft = groupCenter - container.clientWidth / 2
+
+    container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' })
+  }, [hoveredProjectId, isMobile])
 
   const getAllMediaForGrid = (project: Project): MediaItem[] => {
     const media: MediaItem[] = []
@@ -166,7 +191,6 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
     return Array.from(serviceSet)
   }, [projects])
 
-  // ─ FILTERED PROJECTS ─
   const filteredProjects = useMemo(() => {
     let result = projects
     if (activeService) result = result.filter((p) => p.services.includes(activeService))
@@ -378,10 +402,16 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
                       transition={{ duration: 0 }}
                       className="h-[100px] object-contain flex-shrink-0 cursor-pointer"
                       ref={(el) => {
-                        if (el) imageRefs.current[project._id][idx] = el
+                        if (el) imageRefs.current[project._id][idx] = el as unknown as HTMLDivElement
                       }}
-                      onMouseEnter={() => setHoveredProjectId(project._id)}
-                      onMouseLeave={() => setHoveredProjectId(null)}
+                      onMouseEnter={() => {
+                        isHoveringImage.current = true
+                        setHoveredProjectId(project._id)
+                      }}
+                      onMouseLeave={() => {
+                        isHoveringImage.current = false
+                        setHoveredProjectId(null)
+                      }}
                       onClick={() => router.push(`/projects/${project.slug?.current}`)}
                       style={{ userSelect: 'none' }}
                     />
@@ -390,7 +420,7 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
               )}
             </div>
 
-            {/* Column headers — always rendered, 2-col on mobile, 8-col on desktop */}
+            {/* Column headers */}
             <div
               className={`${
                 isMobile
@@ -423,7 +453,10 @@ export default function ProjectsToggle({ projects }: ProjectsToggleProps) {
                     : 'grid grid-cols-8 gap-[30px] mx-[10px] py-[2px] max-w-[calc(100%-20px)]'
                 } cursor-pointer`}
                 animate={{ opacity: !hoveredProjectId || hoveredProjectId === p._id ? 1 : 0.25 }}
-                onMouseEnter={() => setHoveredProjectId(p._id)}
+                onMouseEnter={() => {
+                  isHoveringImage.current = false
+                  setHoveredProjectId(p._id)
+                }}
                 onMouseLeave={() => setHoveredProjectId(null)}
                 onClick={() => router.push(`/projects/${p.slug?.current}`)}
               >

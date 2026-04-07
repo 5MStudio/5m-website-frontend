@@ -105,24 +105,8 @@ export default function SelectedProjectHero({ project }: SelectedProjectHeroProp
           <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
             {isMobile ? (
               <div className="flex justify-between items-center px-[10px] max-w-[calc(100%-20px)] mx-auto">
-                <div className="flex gap-[10px] truncate">
-                  <span className="truncate">{project.client}</span>
-                  <span className="truncate">{project.title}</span>
-                </div>
-                <div
-                  className="flex items-center whitespace-nowrap overflow-hidden"
-                  ref={servicesRef}
-                >
-                  {visibleServices.map((service, idx) => (
-                    <span
-                      key={service}
-                      style={{ marginRight: idx === visibleServices.length - 1 && hiddenCount <= 0 ? 0 : '10px' }}
-                    >
-                      {service}
-                    </span>
-                  ))}
-                  {hiddenCount > 0 && <span>+{hiddenCount}</span>}
-                </div>
+                <span className="truncate">{project.client}</span>
+                <span className="truncate">{project.title}</span>
               </div>
             ) : (
               <div className="grid grid-cols-8 px-[10px] gap-[30px] max-w-[calc(100%-20px)] mx-auto">
