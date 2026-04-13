@@ -20,7 +20,7 @@ export type MuxVideo = {
 // ───────────────────
 export interface ImageWithVideo {
   _id?: string
-  asset?: {       // matches GROQ query
+  asset?: {
     _id: string
     url: string
   }
@@ -66,7 +66,10 @@ export interface ContentBlock {
 export interface GalleryBlock extends ContentBlock {
   _type: 'galleryBlock'
   images: ImageWithVideo[]
-  layout: 'two' | 'grid' | 'full'
+  layout: 'two' | 'grid' | 'full' | 'single' | 'imageText'
+  alignment?: 'left' | 'center' | 'right'
+  imagePosition?: 'left' | 'right'
+  text?: any[]
 }
 
 // ───────────────────

@@ -1,174 +1,119 @@
+// ProjectCard.tsx
 'use client'
 
-import React, { useRef, useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useRef, useEffect } from 'react'
+import Hls from 'hls.js'
 import { urlFor } from '../sanity/image'
-import Link from 'next/link'
-import { Project } from '@/types/project'
+import type { Project } from '@/types/project'
+
+const MAX_HOVER_IMAGES = 4
 
 interface ProjectCardProps {
   project: Project
-  fadeIndex?: number
 }
 
-export default function ProjectCard({ project, fadeIndex = 0 }: ProjectCardProps) {
-  if (!project.slug?.current) return null
-
-  // ───────────────────
-  // Thumbnail media
-  // ───────────────────
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [cardWidth, setCardWidth] = useState(0)
-
-  useEffect(() => {
-    function updateWidth() {
-      if (!cardRef.current) return
-      setCardWidth(cardRef.current.offsetWidth)
-    }
-    updateWidth()
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
-  }, [])
-
+export default function ProjectCard({ project }: ProjectCardProps) {
   const aspectRatio = project.thumbnail?.ratio === 'landscape' ? 16 / 9 : 4 / 5
-  const cardHeight = cardWidth / aspectRatio
 
-  const thumbnailVideoId =
-    project.thumbnail?.video?.asset?.data?.playback_ids?.[0]?.id
-  const thumbnailVideoUrl = thumbnailVideoId
-    ? `https://stream.mux.com/${thumbnailVideoId}.m3u8`
-    : undefined
+  const videoId = project.thumbnail?.video?.asset?.data?.playback_ids?.[0]?.id
+  const videoUrl = videoId ? `https://stream.mux.com/${videoId}.m3u8` : undefined
 
-  const thumbnailImageAsset = project.thumbnail?.asset
-    ? project.thumbnail.asset
-    : (project.thumbnail as any)?.image?.asset
-  const thumbnailImageUrl = thumbnailImageAsset ? urlFor(thumbnailImageAsset) : undefined
+  const imageAsset = project.thumbnail?.asset ?? (project.thumbnail as any)?.image?.asset
+  const imageUrl = imageAsset ? urlFor(imageAsset) : undefined
 
-  // ───────────────────
-  // Count images for overlay
-  // ───────────────────
-  const imageCount =
-    (project.thumbnail?.asset || project.thumbnail?.video ? 1 : 0) +
-    (project.contentBlocks?.reduce((acc, block) => {
-      if (block._type === 'galleryBlock') return acc + (block.images?.length || 0)
-      if (block._type === 'singleImageBlock') return acc + 1
-      if (block._type === 'fullImageBlock') return acc + 1
-      return acc
-    }, 0) || 0)
+  let allImages: any[] = []
+  for (const block of project.contentBlocks || []) {
+    if (block._type === 'galleryBlock' && block.images?.length) {
+      allImages.push(...block.images.filter((img: any) => img?.asset))
+    } else if (block._type === 'singleImageBlock' && block.image?.asset) {
+      allImages.push(block.image)
+    } else if (block._type === 'fullImageBlock' && block.image?.asset) {
+      allImages.push(block.image)
+    }
+  }
+  allImages = allImages.slice(0, MAX_HOVER_IMAGES)
 
-  // ───────────────────
-  // Services visibility logic
-  // ───────────────────
-  const containerRef = useRef<HTMLSpanElement>(null)
-  const [visibleCount, setVisibleCount] = useState(project.services.length)
+  const MAX_SERVICES = 1
+  const visibleServices = project.services.slice(0, MAX_SERVICES)
+  const hiddenCount = project.services.length - visibleServices.length
+
+  // ✅ Hooks are now at the top level of a component, not inside a loop
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    function updateVisible() {
-      if (!containerRef.current) return
-      const containerWidth = containerRef.current.offsetWidth
-      let totalWidth = 0
-      let count = project.services.length
+    if (!videoRef.current || !videoUrl) return
 
-      for (let i = 0; i < project.services.length; i++) {
-        const temp = document.createElement('span')
-        temp.style.visibility = 'hidden'
-        temp.style.position = 'absolute'
-        temp.style.whiteSpace = 'nowrap'
-        temp.style.fontSize = '12px'
-        temp.style.fontFamily = 'AntiqueLegacy, sans-serif'
-        temp.innerText = project.services[i]
-        document.body.appendChild(temp)
-
-        totalWidth += temp.offsetWidth
-        if (i < project.services.length - 1) totalWidth += 10
-
-        document.body.removeChild(temp)
-
-        if (totalWidth > containerWidth) {
-          count = i
-          break
-        }
-      }
-
-      setVisibleCount(count)
+    if (Hls.isSupported()) {
+      const hls = new Hls()
+      hls.loadSource(videoUrl)
+      hls.attachMedia(videoRef.current)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        videoRef.current?.play().catch(() => {})
+      })
+      return () => hls.destroy()
+    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+      videoRef.current.src = videoUrl
+      videoRef.current.play().catch(() => {})
     }
+  }, [videoUrl])
 
-    updateVisible()
-    window.addEventListener('resize', updateVisible)
-    return () => window.removeEventListener('resize', updateVisible)
-  }, [project.services])
-
-  const visibleServices = project.services.slice(0, visibleCount)
-  const hiddenCount = project.services.length - visibleCount
-
-  // ───────────────────
-  // Render
-  // ───────────────────
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: fadeIndex * 0.1, duration: 0.5 }}
+    <a
+      href={`/projects/${project.slug?.current}`}
+      className="group block rounded overflow-hidden shadow-sm w-full"
     >
-      <Link
-        href={`/projects/${project.slug.current}`}
-        className="group block relative rounded overflow-hidden mx-[-10px] shadow-sm cursor-pointer"
-      >
-        {(thumbnailVideoUrl || thumbnailImageUrl) && (
-          <div
-            ref={cardRef}
-            className="relative w-full"
-            style={{ height: `${cardHeight}px` }}
-          >
-            {thumbnailVideoUrl ? (
-              <video
-                src={thumbnailVideoUrl}
-                className="absolute top-0 left-0 w-full h-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-              />
-            ) : (
-              <img
-                src={thumbnailImageUrl!}
-                alt={project.title}
-                className="absolute top-0 left-0 w-full h-full object-cover"
-              />
-            )}
+      <div className="w-full flex justify-center">
+        <div className="relative w-full max-w-full" style={{ aspectRatio: `${aspectRatio}` }}>
+          {videoUrl ? (
+            <video
+              ref={videoRef}
+              className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-20"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={project.title}
+              className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-20"
+            />
+          ) : (
+            <div className="absolute top-0 left-0 w-full h-full bg-gray-200 transition-opacity duration-300 group-hover:opacity-20" />
+          )}
 
-            <div className="absolute top-[10px] right-[10px] bg-black bg-opacity-50 text-white text-xs font-medium px-2 py-1 rounded z-10 opacity-0 group-hover:opacity-0 transition-opacity duration-200">
-              {`0${imageCount}`}
+          {allImages.length > 0 && (
+            <div
+              className="absolute bottom-[10px] left-[10px] right-[10px] flex gap-[5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+              style={{ width: 'calc(100% - 20px)' }}
+            >
+              {allImages.map((img: any, idx: number) => {
+                const asset = img?.asset
+                if (!asset) return null
+                return (
+                  <img key={idx} src={`${urlFor(asset)}?w=80`} alt="" style={{ height: '40px', width: 'auto' }} />
+                )
+              })}
             </div>
-          </div>
-        )}
-
-        <div className="pt-[10px] px-[10px] flex justify-between text-sm transition-opacity duration-200 group-hover:opacity-25">
-          <span>{project.client}</span>
-
-          <span
-            ref={containerRef}
-            className="flex items-center whitespace-nowrap overflow-hidden"
-          >
-            {visibleServices.map((service, idx) => (
-              <span
-                key={service}
-                style={{
-                  marginRight:
-                    idx === visibleServices.length - 1 && hiddenCount <= 0
-                      ? 0
-                      : '10px',
-                }}
-              >
-                {service}
-              </span>
-            ))}
-
-            {hiddenCount > 0 && <span>+{hiddenCount}</span>}
-          </span>
+          )}
         </div>
-      </Link>
-    </motion.div>
+      </div>
+
+      <div className="pt-[10px] px-[10px] flex justify-between text-sm transition-opacity duration-200 group-hover:opacity-25">
+        <span>{project.client}</span>
+        <span className="flex items-center whitespace-nowrap overflow-hidden">
+          {visibleServices.map((service, idx) => (
+            <span
+              key={service}
+              style={{ marginRight: idx === visibleServices.length - 1 && hiddenCount <= 0 ? 0 : '10px' }}
+            >
+              {service}
+            </span>
+          ))}
+          {hiddenCount > 0 && <span>+{hiddenCount}</span>}
+        </span>
+      </div>
+    </a>
   )
 }

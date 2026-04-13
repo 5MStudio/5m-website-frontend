@@ -31,7 +31,6 @@ export default function AboutContent({ about }: AboutContentProps) {
 
   const dynamicSpan = isSmallScreen ? 'col-span-4' : 'col-span-2'
 
-  // helper to render clickable items with commas
   const renderClickableList = (items?: string[], queryParam?: string) =>
     items?.map((item, idx) => (
       <React.Fragment key={item}>
@@ -145,7 +144,9 @@ export default function AboutContent({ about }: AboutContentProps) {
           <div className="col-start-3 col-span-2 font-bold">Contact</div>
           <div className={`col-start-5 ${dynamicSpan} flex flex-col gap-1`}>
             {about.contact?.map((item, idx) => (
-              <div key={idx}>{item}</div>
+              <div key={idx}>
+                <a href={`mailto:${item.email}`}>{item.label}</a>
+              </div>
             ))}
           </div>
         </motion.div>
@@ -163,7 +164,9 @@ export default function AboutContent({ about }: AboutContentProps) {
           <div className="col-start-3 col-span-2 font-bold">Platforms</div>
           <div className={`col-start-5 ${dynamicSpan} flex flex-col gap-1`}>
             {about.platforms?.map((p, idx) => (
-              <div key={idx}>{p}</div>
+              <div key={idx}>
+                <a href={p.url} target="_blank" rel="noopener noreferrer">{p.label}</a>
+              </div>
             ))}
           </div>
         </motion.div>

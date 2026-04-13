@@ -17,9 +17,6 @@ import SingleImageBlock from '@/components/SingleImageBlock'
 import FullImageBlock from '@/components/FullImageBlock'
 import { PortableText } from '@portabletext/react'
 
-// ───────────────
-// Type guards
-// ───────────────
 function isGalleryBlock(block: ContentBlock): block is GalleryBlock {
   return block._type === 'galleryBlock'
 }
@@ -37,6 +34,26 @@ interface ProjectPageClientProps {
   relatedProjects?: Project[]
 }
 
+const colStartClass: Record<number, string> = {
+  1: 'col-start-1',
+  2: 'col-start-2',
+  3: 'col-start-3',
+  4: 'col-start-4',
+  5: 'col-start-5',
+  6: 'col-start-6',
+}
+
+const colSpanClass: Record<number, string> = {
+  1: 'col-span-1',
+  2: 'col-span-2',
+  3: 'col-span-3',
+  4: 'col-span-4',
+  5: 'col-span-5',
+  6: 'col-span-6',
+  7: 'col-span-7',
+  8: 'col-span-8',
+}
+
 export default function ProjectPageClient({ project, relatedProjects = [] }: ProjectPageClientProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -48,15 +65,12 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
     const handleResize = () => {
       const width = window.innerWidth
       if (width < 640) {
-        // smallest screens
-        setColStart(5)
-        setColSpan(4)
+        setColStart(3)
+        setColSpan(6)
       } else if (width < 1024) {
-        // medium screens
-        setColStart(5)
-        setColSpan(4)
+        setColStart(3)
+        setColSpan(6)
       } else {
-        // large screens
         setColStart(5)
         setColSpan(2)
       }
@@ -93,9 +107,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
                 className="grid grid-cols-8 gap-[30px] px-[10px] mx-auto"
                 style={{ maxWidth: 'calc(100% - 20px)' }}
               >
-                <div
-                  className={`col-start-${colStart} col-span-${colSpan} pt-[90px] pb-[90px]`}
-                >
+                <div className={`${colStartClass[colStart]} ${colSpanClass[colSpan]} pt-[90px] pb-[90px]`}>
                   <PortableText
                     value={block.text}
                     components={{
@@ -143,7 +155,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
             style={{ maxWidth: 'calc(100% - 100px)' }}
           >
             <div
-              className={`col-start-${colStart} col-span-${colSpan} cursor-pointer pt-[90px] pb-[90px]`}
+              className={`${colStartClass[colStart]} ${colSpanClass[colSpan]} cursor-pointer pt-[90px] pb-[90px]`}
               style={{ mixBlendMode: 'normal' }}
               onClick={() => router.push('/projects')}
             >
