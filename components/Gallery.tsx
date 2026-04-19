@@ -1,14 +1,64 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { GalleryBlock } from '@/types/project'
+import React, { useEffect, useRef, useState } from 'react'
+import Hls from 'hls.js'
+import { GalleryBlock, ImageWithVideo } from '@/types/project'
 import { PortableText } from '@portabletext/react'
 
 interface GalleryProps {
   block: GalleryBlock
+  startIndex?: number
 }
 
-export default function Gallery({ block }: GalleryProps) {
+// ── media renderer ────────────────────────────────────────────────────────────
+function MediaItem({ img, className }: { img: ImageWithVideo; className?: string }) {
+  const playbackId = img.video?.asset?.data?.playback_ids?.[0]?.id
+  const videoUrl = playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : undefined
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !videoUrl) return
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({ autoStartLoad: true })
+      hls.loadSource(videoUrl)
+      hls.attachMedia(video)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {})
+      })
+      return () => hls.destroy()
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoUrl
+      video.play().catch(() => {})
+    }
+  }, [videoUrl])
+
+  if (videoUrl) {
+    return (
+      <video
+        ref={videoRef}
+        className={className}
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+    )
+  }
+
+  return (
+    <img
+      src={img.asset?.url}
+      alt={img.title || ''}
+      className={className}
+    />
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function Gallery({ block, startIndex = 0 }: GalleryProps) {
   const [isSmall, setIsSmall] = useState(false)
 
   useEffect(() => {
@@ -22,6 +72,8 @@ export default function Gallery({ block }: GalleryProps) {
   }, [])
 
   if (!block.images || block.images.length === 0) return null
+
+  const num = (n: number) => String(n).padStart(2, '0')
 
   const stickyOverlayStyle: React.CSSProperties = {
     position: 'absolute',
@@ -53,22 +105,16 @@ export default function Gallery({ block }: GalleryProps) {
       <section className="relative w-screen box-border">
         <div className={`flex w-full ${justifyMap[alignment]}`}>
           <div className="relative box-border" style={{ width: 'calc(50% - 5px)' }}>
-            <img
-              src={img.asset?.url}
-              alt={img.title || ''}
-              className="w-full h-auto object-cover block"
-            />
+            <MediaItem img={img} className="w-full h-auto object-cover block" />
             <div style={stickyOverlayStyle}>
               <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                 <div className="grid grid-cols-4 w-full">
                   <div className="col-span-2 flex items-center justify-start pl-[10px]">
-                    01
+                    {num(startIndex + 1)}
                   </div>
-                  {img.title && (
-                    <div className="col-span-2 flex items-center justify-start pl-[10px]">
-                      {img.title}
-                    </div>
-                  )}
+                  <div className="col-span-2 flex items-center justify-start pl-[10px]">
+                    {img.title}
+                  </div>
                 </div>
               </div>
             </div>
@@ -87,15 +133,11 @@ export default function Gallery({ block }: GalleryProps) {
 
     const imageEl = (
       <div className="relative w-1/2 box-border">
-        <img
-          src={img.asset?.url}
-          alt={img.title || ''}
-          className="w-full h-auto object-cover block"
-        />
+        <MediaItem img={img} className="w-full h-auto object-cover block" />
         <div style={stickyOverlayStyle}>
           <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
             <div className="grid grid-cols-4 w-full">
-              {!imageLeft && img.title && (
+              {!imageLeft && (
                 <div className="col-span-2 flex items-center justify-end pr-[10px]">
                   {img.title}
                 </div>
@@ -108,9 +150,9 @@ export default function Gallery({ block }: GalleryProps) {
                   paddingRight: !imageLeft ? '10px' : undefined,
                 }}
               >
-                01
+                {num(startIndex + 1)}
               </div>
-              {imageLeft && img.title && (
+              {imageLeft && (
                 <div className="col-span-2 flex items-center justify-start pl-[10px]">
                   {img.title}
                 </div>
@@ -151,15 +193,11 @@ export default function Gallery({ block }: GalleryProps) {
         <div className="flex w-full gap-[10px] box-border">
           {block.images.map((img, idx) => (
             <div key={idx} className="relative w-1/2 box-border">
-              <img
-                src={img.asset?.url}
-                alt={img.title || ''}
-                className="w-full h-auto object-cover block"
-              />
+              <MediaItem img={img} className="w-full h-auto object-cover block" />
               <div style={stickyOverlayStyle}>
                 <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                   <div className="grid grid-cols-4 w-full">
-                    {idx === 1 && img.title && (
+                    {idx === 1 && (
                       <div className="col-span-2 flex items-center justify-end pr-[10px]">
                         {img.title}
                       </div>
@@ -172,9 +210,9 @@ export default function Gallery({ block }: GalleryProps) {
                         paddingRight: idx !== 0 ? '10px' : undefined,
                       }}
                     >
-                      {`0${idx + 1}`}
+                      {num(startIndex + idx + 1)}
                     </div>
-                    {idx === 0 && img.title && (
+                    {idx === 0 && (
                       <div className="col-span-2 flex items-center justify-start pl-[10px]">
                         {img.title}
                       </div>
@@ -224,15 +262,11 @@ export default function Gallery({ block }: GalleryProps) {
 
           return (
             <div key={idx} className={`relative box-border ${!isSmall ? `col-span-${colSpan}` : ''}`}>
-              <img
-                src={img.asset?.url}
-                alt={img.title || ''}
-                className="w-full h-auto object-cover block"
-              />
+              <MediaItem img={img} className="w-full h-auto object-cover block" />
               <div style={stickyOverlayStyle}>
                 <div className="sticky top-1/2 -translate-y-1/2 w-full h-fit">
                   <div className="grid grid-cols-4 w-full">
-                    {isRightSide && img.title && (
+                    {isRightSide && (
                       <div className="col-span-2 flex items-center justify-end pr-[10px]">
                         {img.title}
                       </div>
@@ -245,9 +279,9 @@ export default function Gallery({ block }: GalleryProps) {
                         paddingRight: isRightSide ? '10px' : undefined,
                       }}
                     >
-                      {`0${idx + 1}`}
+                      {num(startIndex + idx + 1)}
                     </div>
-                    {!isRightSide && img.title && (
+                    {!isRightSide && (
                       <div className="col-span-2 flex items-center justify-start pl-[10px]">
                         {img.title}
                       </div>

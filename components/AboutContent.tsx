@@ -76,7 +76,6 @@ export default function AboutContent({ about }: AboutContentProps) {
       <div
         className="grid grid-cols-8 mx-auto"
         style={{
-          maxWidth: `calc(100% - ${grid.margin * 2}px)`,
           columnGap: isSmallScreen ? '12px' : `${grid.gutter}px`,
           rowGap: '24px',
         }}

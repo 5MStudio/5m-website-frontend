@@ -84,6 +84,9 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
 
   const servicesUsed = project.services?.join(', ') || ''
 
+  // Build a running image count so numbering is continuous across all gallery blocks
+  let imageCount = 0
+
   return (
     <motion.main
       key={pathname}
@@ -121,9 +124,11 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
         }
 
         if (isGalleryBlock(block)) {
+          const start = imageCount
+          imageCount += block.images?.length ?? 0
           return (
             <div key={idx} className={blockClass}>
-              <Gallery block={block} />
+              <Gallery block={block} startIndex={start} />
             </div>
           )
         }

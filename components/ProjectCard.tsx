@@ -1,12 +1,91 @@
 // ProjectCard.tsx
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import Hls from 'hls.js'
 import { urlFor } from '../sanity/image'
 import type { Project } from '@/types/project'
 
-const MAX_HOVER_IMAGES = 4
+const MAX_HOVER_IMAGES = 3
+const MAX_SERVICES = 2
+
+function TruncatedServices({ services }: { services: string[] }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [visibleCount, setVisibleCount] = useState(services.length)
+
+  const measure = useCallback(() => {
+    if (!containerRef.current) return
+    const containerWidth = containerRef.current.offsetWidth
+    let totalWidth = 0
+    let count = 0
+
+    for (let i = 0; i < Math.min(services.length, MAX_SERVICES); i++) {
+      const temp = document.createElement('span')
+      temp.style.visibility = 'hidden'
+      temp.style.position = 'absolute'
+      temp.style.whiteSpace = 'nowrap'
+      temp.style.fontSize = window.getComputedStyle(containerRef.current).fontSize
+      temp.style.fontFamily = window.getComputedStyle(containerRef.current).fontFamily
+      temp.innerText = services[i]
+      document.body.appendChild(temp)
+      const spanWidth = temp.offsetWidth
+      document.body.removeChild(temp)
+
+      const gap = i < services.length - 1 ? 10 : 0
+      const remainderLabel = i + 1 < services.length ? ` +${services.length - (i + 1)}` : ''
+      const remainderWidth = remainderLabel
+        ? (() => {
+            const t = document.createElement('span')
+            t.style.visibility = 'hidden'
+            t.style.position = 'absolute'
+            t.style.whiteSpace = 'nowrap'
+            t.style.fontSize = window.getComputedStyle(containerRef.current!).fontSize
+            t.style.fontFamily = window.getComputedStyle(containerRef.current!).fontFamily
+            t.innerText = remainderLabel.trim()
+            document.body.appendChild(t)
+            const w = t.offsetWidth
+            document.body.removeChild(t)
+            return w + 10 // 10px gap before +X
+          })()
+        : 0
+
+      if (totalWidth + spanWidth + gap + remainderWidth <= containerWidth) {
+        totalWidth += spanWidth + gap
+        count = i + 1
+      } else {
+        break
+      }
+    }
+
+    setVisibleCount(Math.max(count, 0))
+  }, [services])
+
+  useEffect(() => {
+    measure()
+    const container = containerRef.current
+    if (!container) return
+    const ro = new ResizeObserver(measure)
+    ro.observe(container)
+    return () => ro.disconnect()
+  }, [measure])
+
+  const visible = services.slice(0, visibleCount)
+  const hiddenCount = services.length - visibleCount
+
+  return (
+    <div ref={containerRef} className="flex justify-end items-center whitespace-nowrap overflow-hidden min-w-0">
+      {visible.map((service, idx) => (
+        <span
+          key={service}
+          style={{ marginRight: idx === visible.length - 1 && hiddenCount <= 0 ? 0 : '10px' }}
+        >
+          {service}
+        </span>
+      ))}
+      {hiddenCount > 0 && <span>+{hiddenCount}</span>}
+    </div>
+  )
+}
 
 interface ProjectCardProps {
   project: Project
@@ -33,11 +112,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   }
   allImages = allImages.slice(0, MAX_HOVER_IMAGES)
 
-  const MAX_SERVICES = 1
-  const visibleServices = project.services.slice(0, MAX_SERVICES)
-  const hiddenCount = project.services.length - visibleServices.length
-
-  // ✅ Hooks are now at the top level of a component, not inside a loop
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -100,19 +174,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </div>
       </div>
 
-      <div className="pt-[10px] px-[10px] flex justify-between text-sm transition-opacity duration-200 group-hover:opacity-25">
-        <span>{project.client}</span>
-        <span className="flex items-center whitespace-nowrap overflow-hidden">
-          {visibleServices.map((service, idx) => (
-            <span
-              key={service}
-              style={{ marginRight: idx === visibleServices.length - 1 && hiddenCount <= 0 ? 0 : '10px' }}
-            >
-              {service}
-            </span>
-          ))}
-          {hiddenCount > 0 && <span>+{hiddenCount}</span>}
-        </span>
+      <div className="pt-[10px] px-[10px] flex justify-between text-sm transition-opacity duration-200 group-hover:opacity-25 gap-[10px]">
+        <span className="whitespace-nowrap shrink-0">{project.client}</span>
+        <div className="min-w-0 flex-1">
+          <TruncatedServices services={project.services} />
+        </div>
       </div>
     </a>
   )

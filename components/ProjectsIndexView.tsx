@@ -3,8 +3,71 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { getAllMediaForText } from '@/hooks/useProjectMedia'
+import Hls from 'hls.js'
+import { getAllMediaForGrid } from '@/hooks/useProjectMedia'
 import type { Project } from '@/types/project'
+import type { MediaItem } from '@/hooks/useProjectMedia'
+
+function StripVideo({
+  url,
+  projectId,
+  idx,
+  activeId,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+  refCallback,
+}: {
+  url: string
+  projectId: string
+  idx: number
+  activeId: string | null
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+  onClick: () => void
+  refCallback: (el: HTMLVideoElement | null) => void
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({ autoStartLoad: true })
+      hls.loadSource(url)
+      hls.attachMedia(video)
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {})
+      })
+      return () => hls.destroy()
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url
+      video.play().catch(() => {})
+    }
+  }, [url])
+
+  return (
+    <motion.video
+      ref={(el) => {
+        ;(videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el
+        refCallback(el)
+      }}
+      key={`${projectId}-${idx}`}
+      animate={{ opacity: !activeId || activeId === projectId ? 1 : 0.25 }}
+      transition={{ duration: 0 }}
+      className="h-[100px] object-contain flex-shrink-0 cursor-pointer"
+      autoPlay
+      muted
+      loop
+      playsInline
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={onClick}
+      style={{ userSelect: 'none' }}
+    />
+  )
+}
 
 interface ProjectsIndexViewProps {
   projects: Project[]
@@ -14,13 +77,15 @@ interface ProjectsIndexViewProps {
   isMobile: boolean
 }
 
-function TruncatedServices({ services, maxWidth }: { services: string[]; maxWidth: number }) {
+function TruncatedServices({ services }: { services: string[] }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [displayCount, setDisplayCount] = useState(services.length)
 
-  useEffect(() => {
+  const measure = useCallback(() => {
     const container = containerRef.current
     if (!container) return
+    const availableWidth = container.clientWidth
+    if (!availableWidth) return
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -28,23 +93,42 @@ function TruncatedServices({ services, maxWidth }: { services: string[]; maxWidt
     ctx.font = `${style.fontSize} ${style.fontFamily}`
     let count = services.length
     while (count > 0) {
-      const label =
-        count === services.length
-          ? services.join(', ')
-          : `${services.slice(0, count).join(', ')} +${services.length - count}`
-      if (ctx.measureText(label).width <= maxWidth) break
+      const labels = services.slice(0, count)
+      const remainder = services.length - count
+      const remainderLabel = remainder > 0 ? `+${remainder}` : ''
+      const parts = remainderLabel ? [...labels, remainderLabel] : labels
+      const totalWidth = parts.reduce((sum, part, idx) => {
+        return sum + ctx.measureText(part).width + (idx < parts.length - 1 ? 10 : 0)
+      }, 0)
+      if (totalWidth <= availableWidth) break
       count--
     }
     setDisplayCount(Math.max(count, 0))
-  }, [services, maxWidth])
+  }, [services])
+
+  useEffect(() => {
+    measure()
+    const container = containerRef.current
+    if (!container) return
+    const ro = new ResizeObserver(measure)
+    ro.observe(container)
+    return () => ro.disconnect()
+  }, [measure])
 
   const shown = services.slice(0, displayCount)
   const remainder = services.length - displayCount
 
   return (
-    <div ref={containerRef} className="truncate">
-      {shown.join(', ')}
-      {remainder > 0 && <span className="opacity-50 ml-1">+{remainder}</span>}
+    <div ref={containerRef} className="flex items-center whitespace-nowrap overflow-hidden">
+      {shown.map((service, idx) => (
+        <span
+          key={service}
+          style={{ marginRight: idx === shown.length - 1 && remainder <= 0 ? 0 : '10px' }}
+        >
+          {service}
+        </span>
+      ))}
+      {remainder > 0 && <span>+{remainder}</span>}
     </div>
   )
 }
@@ -75,18 +159,16 @@ export default function ProjectsIndexView({
     container.scrollTo({ left: (groupLeft + groupRight) / 2 - container.clientWidth / 2, behavior: 'smooth' })
   }, [hoveredProjectId, isMobile, isHoveringImage])
 
-  // ─── mobile drum-roll scroller ─────────────────────────────────────────────
   const listRef = useRef<HTMLDivElement>(null)
   const snapTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
 
   const ROW_HEIGHT = 20
-  const VISIBLE_ROWS = 16
+  const VISIBLE_ROWS = 12
 
   const count = projects.length
   const tripled = [...projects, ...projects, ...projects]
 
-  // start at the exact beginning of the middle copy
   useEffect(() => {
     if (!isMobile || !listRef.current) return
     listRef.current.scrollTop = count * ROW_HEIGHT
@@ -105,7 +187,6 @@ export default function ProjectsIndexView({
     if (!el) return
 
     const onScroll = () => {
-      // one row of buffer at each end before jumping
       if (el.scrollTop < ROW_HEIGHT) {
         el.scrollTop += count * ROW_HEIGHT
       } else if (el.scrollTop >= count * 2 * ROW_HEIGHT) {
@@ -156,8 +237,37 @@ export default function ProjectsIndexView({
         style={{ overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         {projects.map((project) =>
-          getAllMediaForText(project).map((mediaItem, idx) => {
+          getAllMediaForGrid(project).slice(0, 4).map((mediaItem: MediaItem, idx: number) => {
             if (!imageRefs.current[project._id]) imageRefs.current[project._id] = []
+
+            const refCallback = (el: HTMLVideoElement | HTMLImageElement | null) => {
+              if (el) imageRefs.current[project._id][idx] = el as unknown as HTMLDivElement
+            }
+
+            if (mediaItem.type === 'video') {
+              return (
+                <StripVideo
+                  key={`${project._id}-${idx}`}
+                  url={mediaItem.url}
+                  projectId={project._id}
+                  idx={idx}
+                  activeId={activeId ?? null}
+                  onMouseEnter={() => {
+                    if (isMobile) return
+                    isHoveringImage.current = true
+                    setHoveredProjectId(project._id)
+                  }}
+                  onMouseLeave={() => {
+                    if (isMobile) return
+                    isHoveringImage.current = false
+                    setHoveredProjectId(null)
+                  }}
+                  onClick={() => router.push(`/projects/${project.slug?.current}`)}
+                  refCallback={refCallback}
+                />
+              )
+            }
+
             return (
               <motion.img
                 key={`${project._id}-${idx}`}
@@ -233,8 +343,8 @@ export default function ProjectsIndexView({
                 onClick={() => router.push(`/projects/${p.slug?.current}`)}
               >
                 <div className="col-span-1 truncate">{p.client}</div>
-                <div className="col-span-1 truncate">
-                  <TruncatedServices services={p.services} maxWidth={120} />
+                <div className="col-span-1 overflow-hidden">
+                  <TruncatedServices services={p.services} />
                 </div>
               </div>
             ))}
@@ -263,8 +373,8 @@ export default function ProjectsIndexView({
             <div className="col-start-1 col-span-2 truncate">{p.year}</div>
             <div className="col-start-3 col-span-2 truncate">{p.client}</div>
             <div className="col-start-5 col-span-2 truncate">{p.title}</div>
-            <div className="col-start-7 col-span-2 truncate">
-              <TruncatedServices services={p.services} maxWidth={160} />
+            <div className="col-start-7 col-span-2 overflow-hidden">
+              <TruncatedServices services={p.services} />
             </div>
           </motion.div>
         ))
