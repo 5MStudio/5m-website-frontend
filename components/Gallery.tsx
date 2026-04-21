@@ -235,7 +235,7 @@ export default function Gallery({ block, startIndex = 0 }: GalleryProps) {
       <div
         className={`grid w-full box-border gap-[10px] ${
           isSmall
-            ? block.images.length === 2
+            ? block.layout === 'full' || block.images.length === 2
               ? 'grid-cols-1'
               : 'grid-cols-2'
             : 'grid-cols-8'
@@ -254,7 +254,9 @@ export default function Gallery({ block, startIndex = 0 }: GalleryProps) {
           const isRightSideDesktop = isDesktop && idx >= half
 
           const isRightSideMobile =
-            isSmall && (block.images.length === 2 || block.images.length === 4)
+            isSmall &&
+            block.layout !== 'full' &&
+            (block.images.length === 2 || block.images.length === 4)
               ? idx % 2 === 1
               : false
 

@@ -13,7 +13,7 @@ import type { Project } from '@/types/project'
 export default function ProjectsToggle({ projects }: { projects: Project[] }) {
   const searchParams = useSearchParams()
 
-  const [view, setView] = useState<'grid' | 'text'>('grid')
+  const [view, setView] = useState<'grid' | 'text'>('text')
   const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null)
   const isHoveringImage = useRef(false)
 
