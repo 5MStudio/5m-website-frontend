@@ -5,7 +5,7 @@ export const projectBySlugQuery = `
   title,
   year,
   client,
-  services,
+  services[]->{title},
 
   // ─ Thumbnail with video
   thumbnail{

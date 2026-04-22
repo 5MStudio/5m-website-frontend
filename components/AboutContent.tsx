@@ -92,7 +92,7 @@ export default function AboutContent({ about }: AboutContentProps) {
           <div className="col-start-1 col-span-2 font-bold">01</div>
           <div className="col-start-3 col-span-2 font-bold">Services</div>
           <div className={`col-start-5 ${dynamicSpan}`}>
-            {renderClickableList(about.services, 'service')}
+            {renderClickableList(about.services?.map(s => s.title), 'service')}
           </div>
         </motion.div>
 

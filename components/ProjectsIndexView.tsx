@@ -122,7 +122,7 @@ function TruncatedServices({ services }: { services: string[] }) {
     <div ref={containerRef} className="flex items-center whitespace-nowrap overflow-hidden">
       {shown.map((service, idx) => (
         <span
-          key={service}
+          key={idx}
           style={{ marginRight: idx === shown.length - 1 && remainder <= 0 ? 0 : '10px' }}
         >
           {service}
@@ -344,7 +344,7 @@ export default function ProjectsIndexView({
               >
                 <div className="col-span-1 truncate">{p.client}</div>
                 <div className="col-span-1 overflow-hidden">
-                  <TruncatedServices services={p.services} />
+                  <TruncatedServices services={p.services.map(s => s.title)} />
                 </div>
               </div>
             ))}
@@ -374,7 +374,7 @@ export default function ProjectsIndexView({
             <div className="col-start-3 col-span-2 truncate">{p.client}</div>
             <div className="col-start-5 col-span-2 truncate">{p.title}</div>
             <div className="col-start-7 col-span-2 overflow-hidden">
-              <TruncatedServices services={p.services} />
+              <TruncatedServices services={p.services.map(s => s.title)} />
             </div>
           </motion.div>
         ))

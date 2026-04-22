@@ -2,7 +2,7 @@ export const aboutQuery = `
 *[_type == "about"][0]{
   _id,
   studioText,
-  services,
+  services[]->{title},
   clients,
   offices,
   contact,

@@ -1,4 +1,3 @@
-// ProjectCard.tsx
 'use client'
 
 import { useRef, useEffect, useState, useCallback } from 'react'
@@ -45,7 +44,7 @@ function TruncatedServices({ services }: { services: string[] }) {
             document.body.appendChild(t)
             const w = t.offsetWidth
             document.body.removeChild(t)
-            return w + 10 // 10px gap before +X
+            return w + 10
           })()
         : 0
 
@@ -76,7 +75,7 @@ function TruncatedServices({ services }: { services: string[] }) {
     <div ref={containerRef} className="flex justify-end items-center whitespace-nowrap overflow-hidden min-w-0">
       {visible.map((service, idx) => (
         <span
-          key={service}
+          key={idx}
           style={{ marginRight: idx === visible.length - 1 && hiddenCount <= 0 ? 0 : '10px' }}
         >
           {service}
@@ -177,7 +176,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       <div className="pt-[10px] px-[10px] flex justify-between text-sm transition-opacity duration-200 group-hover:opacity-25 gap-[10px]">
         <span className="whitespace-nowrap shrink-0">{project.client}</span>
         <div className="min-w-0 flex-1">
-          <TruncatedServices services={project.services} />
+          <TruncatedServices services={project.services.map(s => s.title)} />
         </div>
       </div>
     </a>

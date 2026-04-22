@@ -54,7 +54,7 @@ function TruncatedServices({ services }: { services: string[] }) {
     <div ref={containerRef} className="col-start-7 col-span-2 flex justify-end items-center whitespace-nowrap overflow-hidden">
       {shown.map((service, idx) => (
         <span
-          key={service}
+          key={idx}
           style={{ marginRight: idx === shown.length - 1 && remainder <= 0 ? 0 : '10px' }}
         >
           {service}
@@ -150,7 +150,7 @@ export default function SelectedProjectHero({ project }: SelectedProjectHeroProp
                 <div className="col-start-1 col-span-2 text-left">{project.year}</div>
                 <div className="col-start-3 col-span-2 text-left">{project.client}</div>
                 <div className="col-start-5 col-span-2 text-right truncate">{project.title}</div>
-                <TruncatedServices services={project.services} />
+                <TruncatedServices services={project.services.map(s => s.title)} />
               </div>
             )}
           </div>

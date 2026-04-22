@@ -6,7 +6,6 @@ import ProjectsToggle from '@/components/ProjectsToggle'
 import type { Project } from '@/types/project'
 
 export default async function ProjectsPage() {
-  // Fetch the single Projects Page document
   const projectsPage = await client.fetch(`
     *[_type == "projectsPage"][0]{
       orderedProjects[]->{
@@ -14,7 +13,7 @@ export default async function ProjectsPage() {
         title,
         year,
         client,
-        services,
+        services[]->{title},
         slug{current},
         thumbnail{
           asset->{_id,url},
@@ -88,7 +87,6 @@ export default async function ProjectsPage() {
     }
   `)
 
-  // Use the ordered projects array (empty fallback just in case)
   const projects: Project[] = projectsPage?.orderedProjects || []
 
   return (

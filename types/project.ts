@@ -97,7 +97,7 @@ export interface Project {
   title: string
   year: string
   client: string
-  services: string[]
+  services: { title: string }[]
   thumbnail?: ImageWithVideo
   hero: Hero
   contentBlocks?: ContentBlock[]

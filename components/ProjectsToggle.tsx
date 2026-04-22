@@ -27,19 +27,19 @@ export default function ProjectsToggle({ projects }: { projects: Project[] }) {
 
   const allServices = useMemo(() => {
     const set = new Set<string>()
-    projects.forEach((p) => p.services.forEach((s) => set.add(s)))
+    projects.forEach((p) => p.services.forEach((s) => set.add(s.title)))
     return Array.from(set)
   }, [projects])
 
   const filteredProjects = useMemo(() => {
     let result = projects
-    if (activeService) result = result.filter((p) => p.services.includes(activeService))
+    if (activeService) result = result.filter((p) => p.services.some((s) => s.title === activeService))
     if (activeClient) result = result.filter((p) => p.client === activeClient)
     if (sortBy) {
       result = [...result].sort((a, b) => {
         if (sortBy === 'Year') return (a.year || '').localeCompare(b.year || '')
         if (sortBy === 'Client') return (a.client || '').localeCompare(b.client || '')
-        if (sortBy === 'Service') return (a.services[0] || '').localeCompare(b.services[0] || '')
+        if (sortBy === 'Service') return (a.services[0]?.title || '').localeCompare(b.services[0]?.title || '')
         return 0
       })
     }

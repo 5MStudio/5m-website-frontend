@@ -11,19 +11,24 @@ interface ProjectPageWrapperProps {
 export default async function ProjectPageWrapper({ params }: ProjectPageWrapperProps) {
   const { slug } = await params
 
-  // Fetch the main project
   const project: Project | null = await client.fetch(projectBySlugQuery, { slug })
 
-  // Fetch related projects: max 4, exclude current project, match at least one shared service
-  const relatedProjects: Project[] = project
+  const rawProject = project
     ? await client.fetch(
-        `*[_type == "project" && _id != $id && count((services[])[@ in $services]) > 0]{
+        `*[_type == "project" && slug.current == $slug][0]{ "serviceIds": services[]._ref }`,
+        { slug }
+      )
+    : null
+
+  const relatedProjects: Project[] = project && rawProject?.serviceIds?.length
+    ? await client.fetch(
+        `*[_type == "project" && _id != $id && count(services[]._ref[@ in $serviceIds]) > 0]{
           _id,
           slug,
           title,
           year,
           client,
-          services,
+          services[]->{title},
           thumbnail{
             asset->{_id,url},
             ratio,
@@ -97,7 +102,7 @@ export default async function ProjectPageWrapper({ params }: ProjectPageWrapperP
             }
           }
         }[0...4]`,
-        { id: project._id, services: project.services }
+        { id: project._id, serviceIds: rawProject.serviceIds }
       )
     : []
 

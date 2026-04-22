@@ -11,7 +11,7 @@ export interface PlatformItem {
 export interface About {
   _id: string
   studioText?: any[]
-  services?: string[]
+  services?: { title: string }[]
   clients?: string[]
   offices?: string[]
   contact?: ContactItem[]

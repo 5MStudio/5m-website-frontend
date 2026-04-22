@@ -6,7 +6,6 @@ import { Project } from '../types/project'
 import HomePageClient from './HomePageClient'
 
 export default async function HomePageWrapper() {
-  // Fetch homepage data including ordered featured projects
   const homepageData = await client.fetch(`*[_type == "homepage"][0]{
     introText,
     "featuredProjects": featuredProjects[]->{
@@ -15,7 +14,7 @@ export default async function HomePageWrapper() {
       slug,
       year,
       client,
-      services,
+      services[]->{title},
       thumbnail{
         asset->{_id,url},
         ratio,
@@ -48,14 +47,13 @@ export default async function HomePageWrapper() {
     }
   }`)
 
-  // Optionally, fetch all projects for other sections like "latest projects"
   const allProjects: Project[] = await client.fetch(`*[_type == "project"]{
     _id,
     title,
     slug,
     year,
     client,
-    services, 
+    services[]->{title},
     thumbnail{
       asset->{_id,url},
       ratio,
