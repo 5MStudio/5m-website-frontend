@@ -164,9 +164,9 @@ export default function ProjectsIndexView({
   const [activeIndex, setActiveIndex] = useState(0)
 
   const ROW_HEIGHT = 20
-  const VISIBLE_ROWS = 12
-
   const count = projects.length
+
+  const VISIBLE_ROWS = count
   const tripled = [...projects, ...projects, ...projects]
 
   useEffect(() => {
@@ -224,7 +224,7 @@ export default function ProjectsIndexView({
   const activeId = isMobile ? projects[activeIndex]?._id : hoveredProjectId
 
   const gridClass = isMobile
-    ? 'grid grid-cols-2 gap-[10px] mx-[10px] max-w-[calc(100%-20px)]'
+    ? 'grid grid-cols-2 gap-[30px] mx-[10px] max-w-[calc(100%-20px)]'
     : 'grid grid-cols-8 gap-[30px] mx-[10px] max-w-[calc(100%-20px)]'
 
   return (
@@ -333,7 +333,7 @@ export default function ProjectsIndexView({
             {tripled.map((p, i) => (
               <div
                 key={`${p._id}-${i}`}
-                className="grid grid-cols-2 gap-[10px] mx-[10px] max-w-[calc(100%-20px)] cursor-pointer overflow-hidden"
+                className="grid grid-cols-2 gap-[30px] mx-[10px] max-w-[calc(100%-20px)] cursor-pointer overflow-hidden"
                 style={{
                   height: ROW_HEIGHT,
                   lineHeight: `${ROW_HEIGHT}px`,

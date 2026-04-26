@@ -74,7 +74,7 @@ export default function ProjectsHeader({
 }: ProjectsHeaderProps) {
   if (isMobile) {
     return (
-      <div className="flex gap-[30px] px-[10px] mb-[10px] w-[calc(100%-20px)]">
+      <div className="flex gap-[30px] px-[10px] mb-[10px]">
         <div className="flex flex-1 gap-[10px]">
           <span
             className="cursor-pointer transition-opacity duration-200"

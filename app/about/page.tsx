@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { client } from '@/sanity/client'
 import { aboutQuery } from '@/sanity/queries/about'
 import type { About } from '@/types/about'
