@@ -82,7 +82,7 @@ export default function ProjectPageClient({ project, relatedProjects = [] }: Pro
 
   if (!project) return <div>Project not found</div>
 
-  const servicesUsed = project.services?.join(', ') || ''
+  const servicesUsed = project.services?.map(s => s.title).join(', ') || ''
 
   // Build a running image count so numbering is continuous across all gallery blocks
   let imageCount = 0
