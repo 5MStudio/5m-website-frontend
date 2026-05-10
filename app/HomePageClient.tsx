@@ -12,17 +12,18 @@ interface HomePageClientProps {
   featuredProjects: Project[]
   allProjects: Project[]
   homepageData: { introText?: any }
+  featuredGridProjects: Project[]
 }
 
 export default function HomePageClient({
   featuredProjects,
   allProjects,
   homepageData,
+  featuredGridProjects,
 }: HomePageClientProps) {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Track column layout exactly like ProjectPageClient
   const [colStart, setColStart] = useState(5)
   const [colSpan, setColSpan] = useState(2)
 
@@ -30,15 +31,12 @@ export default function HomePageClient({
     const handleResize = () => {
       const width = window.innerWidth
       if (width < 640) {
-        // small screens
         setColStart(5)
         setColSpan(4)
       } else if (width < 1024) {
-        // medium screens
         setColStart(5)
         setColSpan(4)
       } else {
-        // large screens
         setColStart(5)
         setColSpan(2)
       }
@@ -49,8 +47,10 @@ export default function HomePageClient({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Take only the newest 4 projects
-  const latestProjects = allProjects.slice(0, 4)
+  // Use manually selected grid projects if available, fall back to 4 newest
+  const latestProjects = featuredGridProjects.length > 0
+    ? featuredGridProjects
+    : allProjects.slice(0, 4)
 
   return (
     <motion.main
